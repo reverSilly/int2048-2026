@@ -12,13 +12,71 @@ namespace reverSilly
 			return a/b;
 		return a/b+1;
 	}
-	u32 __manual_clz(u8 x)
+	template<typename T>
+	u32 __manual_clz(T x)
 	{
-		for(u32 i=0;i<8;++i)
-			if(x&(1<<(7-i)))
+		for(u32 i=0;i<8*sizeof(T);++i)
+			if(x&(1ull<<(sizeof(T)-1-i)))
 				return i;
-		return 8;
+		return 8*sizeof(T);
 	}
+	template<u32 p,u32 g>
+	struct Mod
+	{
+		static constexpr u32 qpow(u64 a,u64 b)
+		{
+			u64 res=1;
+			for(;a;a=a*a%p,b>>=1)
+				if(b&1)
+					res=res*a%p;
+			return res;
+		}
+		static constexpr u32 inv(u32 x)
+		{
+			return qpow(x,p-2);
+		}
+		static constexpr u32 root(u32 n)
+		{
+			return qpow(g,(p-1)/n);
+		}
+		template<bool INV>
+		static constexpr std::array<u32,32> construct()
+		{
+			std::array<u32,32>a;
+			for(u32 i=0;i<32;++i)
+				a[__manual_clz(i)]=root(1<<i);
+			if constexpr(INV)
+				for(u32 i=0;i<32;++i)
+					a[i]=inv(a[i]);
+			return a;
+		}
+		static constexpr std::array<u32,32>w=construct<false>(),iw=construct<true>();
+		template<bool iNTT>
+		static std::vector<u32> NTT(std::vector<u32>const &a)//assert a.size() is 2pow
+		{
+			u32 const n=a.size();
+			if(n==1)
+				return a;
+			std::vector<u32>a0(n/2),a1(n/2),res(n);
+			for(int i=0;i<n;i+=2)
+			{
+				a0[i/2]=a[i];
+				a1[i/2]=a[i+1];
+			}
+			u64 w=Mod::w[__manual_clz(n)],ww=1;
+			if constexpr(iNTT)
+				w=inv(w);
+			a0=NTT<iNTT>(a0);
+			a1=NTT<iNTT>(a1);
+			for(int i=0;i<n;++i,ww=ww*w%p)
+			{
+				res[i]=(a0[i]+ww*a1[i])%p;
+				res[i+n/2]=((a0[i]-ww*a1[i])%p+p)%p;
+			}
+			return res;
+		}
+	};
+	
 	namespace int2048
 	{
 		struct Integer//unsigned
@@ -57,6 +115,18 @@ namespace reverSilly
 				if(i<data.size())
 					return data[i];
 				return 0;
+			}
+			template<typename T>
+			T get(u32 x)const
+			{
+				T res;
+				for(u32 i=0;i<sizeof(T);++i)
+					reinterpret_cast<u8*>(&res)[i]=get(x*sizeof(T)+i);
+				return res;
+			}
+			bool get_bit(u32 i)const
+			{
+				return (get(i>>3)>>(i&0b111))&1;
 			}
 		};
 		std::strong_ordering operator<=>(Integer const &a,Integer const &b)
