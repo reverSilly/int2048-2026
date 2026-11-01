@@ -6,6 +6,8 @@ enable_testing()
 
 include_directories(src/include)
 
+set(CMAKE_CXX_STANDARD 20)
+
 set(DATA_PATH "${CMAKE_CURRENT_SOURCE_DIR}/data")
 file(GLOB_RECURSE SOURCES "${DATA_PATH}/**.cpp")
 
@@ -23,4 +25,5 @@ foreach (SOURCE ${SOURCES})
   set_property(TEST ${TESTCASE_NAME} PROPERTY TIMEOUT 10)
 endforeach()
 
-add_executable(t src/test.cpp src/int2048.cpp)
+add_executable(t src/test.cpp)
+target_compile_options(t PRIVATE -Wall -Wextra)
