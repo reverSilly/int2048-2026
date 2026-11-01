@@ -22,3 +22,5 @@ foreach (SOURCE ${SOURCES})
   endif()
   set_property(TEST ${TESTCASE_NAME} PROPERTY TIMEOUT 10)
 endforeach()
+
+add_executable(t src/test.cpp src/int2048.cpp)
