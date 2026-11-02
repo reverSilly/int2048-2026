@@ -17,9 +17,120 @@
 
 // 请不要使用 using namespace std;
 
+namespace reverSilly 
+{
+	using u8=unsigned char;
+	using u16=unsigned short;
+	using u32=unsigned int;
+	using u64=unsigned long long;
+  template<typename T>
+	u32 __manual_clz(T x)
+	{
+		for(u32 i=0;i<8*sizeof(T);++i)
+			if(x&(1ull<<(sizeof(T)*8-1-i)))
+				return i;
+		return 8*sizeof(T);
+	}
+	template<typename T>
+	T lowbit(T x)
+	{
+		return x&-x;
+	}
+	inline u32 ceil2(u32 x)
+	{
+		if(x==lowbit(x))
+			return x;
+		return 1u<<(32-__manual_clz(x));
+	}
+  namespace int2048
+  {
+    struct Integer;
+		Integer operator+(Integer a,Integer const &b);
+		Integer operator*(Integer const&a,Integer const &b);
+		struct Integer//unsigned
+		{
+			std::vector<u8>data;
+			Integer(u32 n):data(n){}
+			void shrink()
+			{
+				while(!data.empty()&&data.back()==0)
+					data.pop_back();
+			}
+			u32 len()const
+			{
+				int i=data.size()-1;
+				for(;i>=0&&data[i]==0;--i);
+				if(i<0)
+					return 0;
+				return i*8+8-__manual_clz(data[i]);
+			}
+			template<typename T>
+			static Integer from(T i)
+			{
+				Integer res(sizeof(T));
+				*reinterpret_cast<T*>(res.data.data())=i;
+				return res;
+			}
+			static std::vector<Integer> pow10;
+			static Integer from(std::string_view sv)//sv[0] is low
+			{
+				u32 const n=sv.size();
+				if(n<=18)
+				{
+					u64 res=0;
+					for(char i:sv)
+					{
+						res=res+i-'0';
+						res*=10;
+					}
+					return Integer::from(res);
+				}
+				u32 cur=ceil2(n)/2;
+				Integer left=from(sv.substr(0,cur)),base=from(sv.substr(cur));
+				return left+base*pow10[31-__manual_clz(cur)];
+			}
+			template<typename T>
+			T to()const
+			{
+				T res{};
+				for(u32 i=0;i<sizeof(T)&&i<data.size();++i)
+					reinterpret_cast<u8*>(&res)[i]=data[i];
+				return res;
+			}
+			u8 get(u32 i)const
+			{
+				if(i<data.size())
+					return data[i];
+				return 0;
+			}
+			template<typename T>
+			T get(u32 x)const
+			{
+				T res;
+				for(u32 i=0;i<sizeof(T);++i)
+					reinterpret_cast<u8*>(&res)[i]=get(x*sizeof(T)+i);
+				return res;
+			}
+			bool get_bit(u32 i)const
+			{
+				return (get(i>>3)>>(i&0b111))&1;
+			}
+			void set_bit(u32 i,bool v)
+			{
+				if(v)
+					data[i>>3]|=1<<(i&0b111);
+				else
+					data[i>>3]&=~(1<<(i&0b111));
+			}
+		};
+  }
+}
+
 namespace sjtu {
 class int2048 {
   // todo
+  int sign;
+  reverSilly::int2048::Integer value;
 public:
   // 构造函数
   int2048();

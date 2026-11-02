@@ -1,37 +1,13 @@
 #include "int2048.h"
-#include <stdexcept>
-#include <utility>
+#include <concepts>
 
 namespace reverSilly
 {
-	using u8=unsigned char;
-	using u16=unsigned short;
-	using u32=unsigned int;
-	using u64=unsigned long long;
 	u32 ceildiv(u32 a,u32 b)
 	{
 		if(a%b==0)
 			return a/b;
 		return a/b+1;
-	}
-	template<typename T>
-	u32 __manual_clz(T x)
-	{
-		for(u32 i=0;i<8*sizeof(T);++i)
-			if(x&(1ull<<(sizeof(T)*8-1-i)))
-				return i;
-		return 8*sizeof(T);
-	}
-	template<typename T>
-	T lowbit(T x)
-	{
-		return x&-x;
-	}
-	u32 ceil2(u32 x)
-	{
-		if(x==lowbit(x))
-			return x;
-		return 1u<<(32-__manual_clz(x));
 	}
 	template<u32 p,u32 g>
 	struct Mod
@@ -132,63 +108,13 @@ namespace reverSilly
 
 	namespace int2048
 	{
-		struct Integer//unsigned
+		std::vector<Integer> Integer::pow10=[]()
 		{
-			std::vector<u8>data;
-			Integer(u32 n):data(n){}
-			void shrink()
-			{
-				while(!data.empty()&&data.back()==0)
-					data.pop_back();
-			}
-			u32 len()const
-			{
-				int i=data.size()-1;
-				for(;i>=0&&data[i]==0;--i);
-				if(i<0)
-					return 0;
-				return i*8+8-__manual_clz(data[i]);
-			}
-			static Integer from(u32 i)
-			{
-				Integer res(sizeof(u32));
-				*reinterpret_cast<u32*>(res.data.data())=i;
-				return res;
-			}
-			template<typename T>
-			T to()const
-			{
-				T res{};
-				for(u32 i=0;i<sizeof(T)&&i<data.size();++i)
-					reinterpret_cast<u8*>(&res)[i]=data[i];
-				return res;
-			}
-			u8 get(u32 i)const
-			{
-				if(i<data.size())
-					return data[i];
-				return 0;
-			}
-			template<typename T>
-			T get(u32 x)const
-			{
-				T res;
-				for(u32 i=0;i<sizeof(T);++i)
-					reinterpret_cast<u8*>(&res)[i]=get(x*sizeof(T)+i);
-				return res;
-			}
-			bool get_bit(u32 i)const
-			{
-				return (get(i>>3)>>(i&0b111))&1;
-			}
-			void set_bit(u32 i,bool v)
-			{
-				if(v)
-					data[i>>3]|=1<<(i&0b111);
-				else
-					data[i>>3]&=~(1<<(i&0b111));
-			}
-		};
+			std::vector<Integer>res(25,Integer::from(10));
+			for(int i=1;i<25;++i)
+				res[i]=res[i-1]*res[i-1];
+			return res;
+		}();
 		std::strong_ordering operator<=>(Integer const &a,Integer const &b)
 		{
 			int cur=std::max(a.data.size(),b.data.size())-1;
@@ -281,20 +207,17 @@ namespace reverSilly
 		{
 			if(b.len()==0)
 				throw std::invalid_argument("divided by zero.");
-			Integer res(a.data.size());
 			int bit=a.len()-b.len();
 			if(bit<0)
-				return {std::move(res),std::move(a)};
-			Integer Bsh=b<<bit;
-			for(;bit>=0;)
+				return {Integer(0),std::move(a)};
+			Integer res(ceildiv(bit,8)),Bsh{b<<bit};
+			for(;bit>=0;Bsh>>=1,--bit)
 			{
 				if(a>=Bsh)
 				{
 					a-=Bsh;
 					res.set_bit(bit,true);
 				}
-				Bsh>>=1;
-				--bit;
 			}
 			return {std::move(res),std::move(a)};
 		}
@@ -326,7 +249,33 @@ namespace reverSilly
 }
 
 namespace sjtu {
-
-int2048::int2048() {}
+using reverSilly::int2048::Integer;
+int2048::int2048():sign{0},value(0){}
+int2048::int2048(long long x):value(Integer::from(std::abs(x)))
+{
+	if(x<0)
+		sign=-1;
+	if(x==0)
+		sign=0;
+	if(x>0)
+		sign=1;
+}
+int2048::int2048(const std::string &s):value(0)
+{
+	std::string ss=s;
+	for(int i=0;i*2u<ss.size();++i)
+		std::swap(ss[i],ss[ss.size()-1-i]);
+	if(ss.back()=='-')
+	{
+		sign=-1;
+		ss.pop_back();
+	}
+	else
+	 	sign=1;
+	value=Integer::from(s);
+	if(value.len()==0)
+		sign=0;
+}
+int2048::int2048(const int2048&)=default;
 
 } // namespace sjtu
