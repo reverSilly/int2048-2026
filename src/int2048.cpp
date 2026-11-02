@@ -1,6 +1,4 @@
 #include "int2048.h"
-#include <concepts>
-#include <string_view>
 
 namespace reverSilly
 {

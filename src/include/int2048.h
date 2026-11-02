@@ -84,7 +84,7 @@ namespace reverSilly
 				if(n<=18)
 				{
 					u64 res=0;
-					for(u32 i=sv.size()-1;i>=0;--i)
+					for(u32 i=sv.size()-1;i<sv.size();--i)
 					{
 						res*=10;
 						res+=sv[i]-'0';
