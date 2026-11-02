@@ -1,4 +1,6 @@
 #include "int2048.h"
+#include <stdexcept>
+#include <utility>
 
 namespace reverSilly
 {
@@ -73,6 +75,8 @@ namespace reverSilly
 		static std::vector<u32> NTT(std::vector<u32>const &a)//assert a.size() is 2pow
 		{
 			u32 const n=a.size();
+			if(n==0)
+				return {};
 			if(n==1)
 				return a;
 			std::vector<u32>a0(n/2),a1(n/2),res(n);
@@ -96,6 +100,8 @@ namespace reverSilly
 		static std::vector<u32>mul(std::vector<u32> a,std::vector<u32> b)
 		{
 			u32 const n=ceil2(a.size()+b.size());
+			if(n>=1<<25)
+				throw std::out_of_range("integer too big");
 			a.resize(n,0);
 			b.resize(n,0);
 			a=NTT<false>(a);
@@ -174,6 +180,13 @@ namespace reverSilly
 			bool get_bit(u32 i)const
 			{
 				return (get(i>>3)>>(i&0b111))&1;
+			}
+			void set_bit(u32 i,bool v)
+			{
+				if(v)
+					data[i>>3]|=1<<(i&0b111);
+				else
+					data[i>>3]&=~(1<<(i&0b111));
 			}
 		};
 		std::strong_ordering operator<=>(Integer const &a,Integer const &b)
@@ -261,6 +274,35 @@ namespace reverSilly
 			}
 			res1.shrink();
 			return res1;
+		}
+		Integer operator<<(Integer a,u32 b);
+		std::pair<Integer,Integer> div(Integer a,Integer const &b)
+		{
+			if(b.len()==0)
+				throw std::invalid_argument("divided by zero.");
+			Integer res(a.data.size());
+			int bit=a.len()-b.len();
+			if(bit<0)
+				return {std::move(res),std::move(a)};
+			Integer Bsh=b<<bit;
+			for(;bit>=0;)
+			{
+				if(a>=Bsh)
+				{
+					int bef=a.len();
+					a-=Bsh;
+					res.set_bit(bit,true);
+					int aft=a.len();
+					bit-=bef-aft;
+					Bsh>>=bef-aft;
+				}
+				else
+				{
+					Bsh>>=1;
+					--bit;
+				}
+			}
+			return {std::move(res),std::move(a)};
 		}
 		Integer operator+(Integer a,Integer const &b)
 		{
