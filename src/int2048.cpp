@@ -31,7 +31,7 @@ namespace reverSilly
 		static constexpr u32 qpow(u64 a,u64 b)
 		{
 			u64 res=1;
-			for(;a;a=a*a%p,b>>=1)
+			for(;b;a=a*a%p,b>>=1)
 				if(b&1)
 					res=res*a%p;
 			return res;
@@ -44,10 +44,17 @@ namespace reverSilly
 		{
 			return qpow(g,(p-1)/n);
 		}
-		template<bool INV>
-		static constexpr std::array<u32,32> construct()
+		template<u32 p2>
+		static constexpr u64 merge(u32 x,u32 x2)
 		{
-			std::array<u32,32>a;
+			constexpr u32 ip2=inv(p2);
+			u32 k=u64(x-x2)%p*ip2%p;
+			return k*p2+x2;
+		}
+		template<bool INV>
+		static std::vector<u32> construct()
+		{
+			std::vector<u32>a(32);
 			for(u32 i=0;i<32;++i)
 				a[__manual_clz(i)]=root(1<<i);
 			if constexpr(INV)
@@ -55,7 +62,7 @@ namespace reverSilly
 					a[i]=inv(a[i]);
 			return a;
 		}
-		static constexpr std::array<u32,32>w=construct<false>(),iw=construct<true>();
+		static std::vector<u32>w,iw;
 		template<bool iNTT>
 		static std::vector<u32> NTT(std::vector<u32>const &a)//assert a.size() is 2pow
 		{
@@ -63,7 +70,7 @@ namespace reverSilly
 			if(n==1)
 				return a;
 			std::vector<u32>a0(n/2),a1(n/2),res(n);
-			for(int i=0;i<n;i+=2)
+			for(u32 i=0;i<n;i+=2)
 			{
 				a0[i/2]=a[i];
 				a1[i/2]=a[i+1];
@@ -73,7 +80,7 @@ namespace reverSilly
 				w=inv(w);
 			a0=NTT<iNTT>(a0);
 			a1=NTT<iNTT>(a1);
-			for(int i=0;i<n;++i,ww=ww*w%p)
+			for(u32 i=0;i<n;++i,ww=ww*w%p)
 			{
 				res[i]=(a0[i]+ww*a1[i])%p;
 				res[i+n/2]=((a0[i]-ww*a1[i])%p+p)%p;
@@ -82,7 +89,7 @@ namespace reverSilly
 		}
 		static std::vector<u32>mul(std::vector<u32> a,std::vector<u32> b)
 		{
-			u32 const n=1u<<(31-__manual_clz(std::max(a.size(),b.size())));
+			u32 const n=1u<<(31-__manual_clz(a.size()+b.size()));
 			a.resize(n,0);
 			b.resize(n,0);
 			a=NTT<false>(a);
@@ -95,6 +102,21 @@ namespace reverSilly
 			return a;
 		}
 	};
+	template<u32 p,u32 g>
+	std::vector<u32>Mod<p,g>::w=Mod<p,g>::construct<false>();
+	template<u32 p,u32 g>
+	std::vector<u32>Mod<p,g>::iw=Mod<p,g>::construct<true>();
+
+	std::vector<u64>mul(std::vector<u32>const &a,std::vector<u32>const &b)
+	{
+		constexpr u32 p1{167772161},p2{469762049};
+		auto r1=Mod<p1,3>::mul(a,b);
+		auto r2=Mod<p2,3>::mul(a,b);
+		std::vector<u64>res(r1.size());
+		for(u32 i=0;i<r1.size();++i)
+			res[i]=Mod<p1,3>::merge<p2>(r1[i],r2[i]);
+		return res;
+	}
 
 	namespace int2048
 	{
@@ -207,6 +229,32 @@ namespace reverSilly
 			}
 			a.shrink();
 			return a;
+		}
+		Integer operator*(Integer const&a,Integer const &b)
+		{
+			std::vector<u32>aa(ceildiv(a.len(),16)),bb(ceildiv(b.len(),16));
+			for(u32 i=0;i<aa.size();++i)
+				aa[i]=a.get<u16>(i*2);
+			for(u32 i=0;i<bb.size();++i)
+				bb[i]=b.get<u16>(i*2);
+			auto res=mul(aa,bb);
+			u64 carry=0;
+			for(u32 i=0;i<res.size();++i)
+			{
+				res[i]+=carry;
+				carry=res[i]>>16;
+				res[i]%=(1<<16);
+			}
+			if(carry)
+				res.push_back(carry);
+			Integer res1(res.size()*2);
+			for(u32 i=0;i<res.size();++i)
+			{
+				res1.data[i*2]=res[i]%(1<<16);
+				res1.data[i*2+1]=res[i]>>16;
+			}
+			res1.shrink();
+			return res1;
 		}
 		Integer operator+(Integer a,Integer const &b)
 		{
