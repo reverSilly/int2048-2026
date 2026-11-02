@@ -304,6 +304,14 @@ namespace reverSilly
 			}
 			return {std::move(res),std::move(a)};
 		}
+		Integer operator/(Integer const &a,Integer const &b)
+		{
+			return div(a,b).first;
+		}
+		Integer operator%(Integer const &a,Integer const &b)
+		{
+			return div(a,b).second;
+		}
 		Integer operator+(Integer a,Integer const &b)
 		{
 			return a+=b;
