@@ -1,5 +1,6 @@
 #include "int2048.h"
 #include <concepts>
+#include <string_view>
 
 namespace reverSilly
 {
@@ -46,10 +47,10 @@ namespace reverSilly
 					a[i]=inv(a[i]);
 			return a;
 		}
-		static std::vector<u32>w,iw;
 		template<bool iNTT>
 		static std::vector<u32> NTT(std::vector<u32>const &a)//assert a.size() is 2pow
 		{
+			static std::vector<u32>w=Mod<p,g>::construct<false>(),iw=Mod<p,g>::construct<true>();
 			u32 const n=a.size();
 			if(n==0)
 				return {};
@@ -61,12 +62,12 @@ namespace reverSilly
 				a0[i/2]=a[i];
 				a1[i/2]=a[i+1];
 			}
-			u64 w=Mod::w[__manual_clz(n)],ww=1;
+			u64 W=w[__manual_clz(n)],ww=1;
 			if constexpr(iNTT)
-				w=inv(w);
+				W=iw[__manual_clz(n)];
 			a0=NTT<iNTT>(a0);
 			a1=NTT<iNTT>(a1);
-			for(u32 i=0;i<n/2;++i,ww=ww*w%p)
+			for(u32 i=0;i<n/2;++i,ww=ww*W%p)
 			{
 				res[i]=(a0[i]+ww*a1[i])%p;
 				res[i+n/2]=((a0[i]+u64(p)-ww*a1[i]%p)%p+p)%p;
@@ -90,10 +91,6 @@ namespace reverSilly
 			return a;
 		}
 	};
-	template<u32 p,u32 g>
-	std::vector<u32>Mod<p,g>::w=Mod<p,g>::construct<false>();
-	template<u32 p,u32 g>
-	std::vector<u32>Mod<p,g>::iw=Mod<p,g>::construct<true>();
 
 	std::vector<u64>mul(std::vector<u32>const &a,std::vector<u32>const &b)
 	{
@@ -108,13 +105,6 @@ namespace reverSilly
 
 	namespace int2048
 	{
-		std::vector<Integer> Integer::pow10=[]()
-		{
-			std::vector<Integer>res(25,Integer::from(10));
-			for(int i=1;i<25;++i)
-				res[i]=res[i-1]*res[i-1];
-			return res;
-		}();
 		std::strong_ordering operator<=>(Integer const &a,Integer const &b)
 		{
 			int cur=std::max(a.data.size(),b.data.size())-1;
@@ -210,7 +200,7 @@ namespace reverSilly
 			int bit=a.len()-b.len();
 			if(bit<0)
 				return {Integer(0),std::move(a)};
-			Integer res(ceildiv(bit,8)),Bsh{b<<bit};
+			Integer res(ceildiv(bit+1,8)),Bsh{b<<bit};
 			for(;bit>=0;Bsh>>=1,--bit)
 			{
 				if(a>=Bsh)
@@ -272,7 +262,7 @@ int2048::int2048(const std::string &s):value(0)
 	}
 	else
 	 	sign=1;
-	value=Integer::from(s);
+	value=Integer::from(std::string_view(ss));
 	if(value.len()==0)
 		sign=0;
 }

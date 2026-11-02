@@ -71,17 +71,23 @@ namespace reverSilly
 				*reinterpret_cast<T*>(res.data.data())=i;
 				return res;
 			}
-			static std::vector<Integer> pow10;
 			static Integer from(std::string_view sv)//sv[0] is low
 			{
+        static std::vector<Integer> pow10=[]()
+        {
+          std::vector<Integer>res(20,Integer::from(10));
+          for(int i=1;i<20;++i)
+            res[i]=res[i-1]*res[i-1];
+          return res;
+        }();
 				u32 const n=sv.size();
 				if(n<=18)
 				{
 					u64 res=0;
-					for(char i:sv)
+					for(u32 i=sv.size()-1;i>=0;--i)
 					{
-						res=res+i-'0';
 						res*=10;
+						res+=sv[i]-'0';
 					}
 					return Integer::from(res);
 				}
