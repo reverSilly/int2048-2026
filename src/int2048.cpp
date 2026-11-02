@@ -222,6 +222,7 @@ namespace reverSilly
 				a.data[i]-=b.get(i)+carry;
 				carry=nxcarry;
 			}
+			a.shrink();
 			return a;
 		}
 		Integer &operator<<=(Integer &a,u32 b)
@@ -289,18 +290,11 @@ namespace reverSilly
 			{
 				if(a>=Bsh)
 				{
-					int bef=a.len();
 					a-=Bsh;
 					res.set_bit(bit,true);
-					int aft=a.len();
-					bit-=bef-aft;
-					Bsh>>=bef-aft;
 				}
-				else
-				{
-					Bsh>>=1;
-					--bit;
-				}
+				Bsh>>=1;
+				--bit;
 			}
 			return {std::move(res),std::move(a)};
 		}
