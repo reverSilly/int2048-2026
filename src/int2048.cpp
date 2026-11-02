@@ -16,7 +16,7 @@ namespace reverSilly
 	u32 __manual_clz(T x)
 	{
 		for(u32 i=0;i<8*sizeof(T);++i)
-			if(x&(1ull<<(sizeof(T)-1-i)))
+			if(x&(1ull<<(sizeof(T)*8-1-i)))
 				return i;
 		return 8*sizeof(T);
 	}
@@ -24,6 +24,12 @@ namespace reverSilly
 	T lowbit(T x)
 	{
 		return x&-x;
+	}
+	u32 ceil2(u32 x)
+	{
+		if(x==lowbit(x))
+			return x;
+		return 1u<<(31-__manual_clz(x));
 	}
 	template<u32 p,u32 g>
 	struct Mod
@@ -48,7 +54,7 @@ namespace reverSilly
 		static constexpr u64 merge(u32 x,u32 x2)
 		{
 			constexpr u32 ip2=inv(p2);
-			u32 k=u64(x-x2)%p*ip2%p;
+			u64 k=u64(x-x2)%p*ip2%p;
 			return k*p2+x2;
 		}
 		template<bool INV>
@@ -56,7 +62,7 @@ namespace reverSilly
 		{
 			std::vector<u32>a(32);
 			for(u32 i=0;i<32;++i)
-				a[__manual_clz(i)]=root(1<<i);
+				a[__manual_clz(1<<i)]=root(1<<i);
 			if constexpr(INV)
 				for(u32 i=0;i<32;++i)
 					a[i]=inv(a[i]);
@@ -80,7 +86,7 @@ namespace reverSilly
 				w=inv(w);
 			a0=NTT<iNTT>(a0);
 			a1=NTT<iNTT>(a1);
-			for(u32 i=0;i<n;++i,ww=ww*w%p)
+			for(u32 i=0;i<n/2;++i,ww=ww*w%p)
 			{
 				res[i]=(a0[i]+ww*a1[i])%p;
 				res[i+n/2]=((a0[i]-ww*a1[i])%p+p)%p;
@@ -89,7 +95,7 @@ namespace reverSilly
 		}
 		static std::vector<u32>mul(std::vector<u32> a,std::vector<u32> b)
 		{
-			u32 const n=1u<<(31-__manual_clz(a.size()+b.size()));
+			u32 const n=ceil2(a.size()+b.size());
 			a.resize(n,0);
 			b.resize(n,0);
 			a=NTT<false>(a);
@@ -188,7 +194,7 @@ namespace reverSilly
 			bool carry=false;
 			for(u32 i=0;i<a.data.size();++i)
 			{
-				bool nxcarry=(a.data[i]+carry+b.get(i))>(1<<8);
+				bool nxcarry=(a.data[i]+carry+b.get(i))>=(1<<8);
 				a.data[i]+=b.get(i)+carry;
 				carry=nxcarry;
 			}
@@ -234,9 +240,9 @@ namespace reverSilly
 		{
 			std::vector<u32>aa(ceildiv(a.len(),16)),bb(ceildiv(b.len(),16));
 			for(u32 i=0;i<aa.size();++i)
-				aa[i]=a.get<u16>(i*2);
+				aa[i]=a.get<u16>(i);
 			for(u32 i=0;i<bb.size();++i)
-				bb[i]=b.get<u16>(i*2);
+				bb[i]=b.get<u16>(i);
 			auto res=mul(aa,bb);
 			u64 carry=0;
 			for(u32 i=0;i<res.size();++i)
@@ -250,8 +256,8 @@ namespace reverSilly
 			Integer res1(res.size()*2);
 			for(u32 i=0;i<res.size();++i)
 			{
-				res1.data[i*2]=res[i]%(1<<16);
-				res1.data[i*2+1]=res[i]>>16;
+				res1.data[i*2]=res[i]%(1<<8);
+				res1.data[i*2+1]=res[i]>>8;
 			}
 			res1.shrink();
 			return res1;
