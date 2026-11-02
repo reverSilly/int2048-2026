@@ -20,6 +20,11 @@ namespace reverSilly
 				return i;
 		return 8*sizeof(T);
 	}
+	template<typename T>
+	T lowbit(T x)
+	{
+		return x&-x;
+	}
 	template<u32 p,u32 g>
 	struct Mod
 	{
@@ -75,8 +80,22 @@ namespace reverSilly
 			}
 			return res;
 		}
+		static std::vector<u32>mul(std::vector<u32> a,std::vector<u32> b)
+		{
+			u32 const n=1u<<(31-__manual_clz(std::max(a.size(),b.size())));
+			a.resize(n,0);
+			b.resize(n,0);
+			a=NTT<false>(a);
+			b=NTT<false>(b);
+			for(u32 i=0;i<n;++i)
+				a[i]=u64(a[i])*b[i]%p;
+			a=NTT<true>(a);
+			for(u32 i=0,in=inv(n);i<n;++i)
+				a[i]=u64(a[i])*in%p;
+			return a;
+		}
 	};
-	
+
 	namespace int2048
 	{
 		struct Integer//unsigned
