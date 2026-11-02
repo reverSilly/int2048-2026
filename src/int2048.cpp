@@ -29,7 +29,7 @@ namespace reverSilly
 	{
 		if(x==lowbit(x))
 			return x;
-		return 1u<<(31-__manual_clz(x));
+		return 1u<<(32-__manual_clz(x));
 	}
 	template<u32 p,u32 g>
 	struct Mod
@@ -51,10 +51,10 @@ namespace reverSilly
 			return qpow(g,(p-1)/n);
 		}
 		template<u32 p2>
-		static constexpr u64 merge(u32 x,u32 x2)
+		static constexpr u64 merge(u64 x,u64 x2)
 		{
 			constexpr u32 ip2=inv(p2);
-			u64 k=u64(x-x2)%p*ip2%p;
+			u64 k=u64(x%p+p-x2%p)%p*ip2%p;
 			return k*p2+x2;
 		}
 		template<bool INV>
@@ -89,7 +89,7 @@ namespace reverSilly
 			for(u32 i=0;i<n/2;++i,ww=ww*w%p)
 			{
 				res[i]=(a0[i]+ww*a1[i])%p;
-				res[i+n/2]=((a0[i]-ww*a1[i])%p+p)%p;
+				res[i+n/2]=((a0[i]+u64(p)-ww*a1[i]%p)%p+p)%p;
 			}
 			return res;
 		}
