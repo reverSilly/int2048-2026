@@ -286,7 +286,7 @@ namespace reverSilly
 				throw std::invalid_argument("divided by zero.");
 			Integer res(a.data.size());
 			T rem=0;
-			for(int i=a.data.size();i>=0;--i)
+			for(int i=a.data.size()-1;i>=0;--i)
 			{
 				rem<<=8;
 				rem|=a.data[i];
