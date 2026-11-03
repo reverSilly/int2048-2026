@@ -244,7 +244,7 @@ namespace reverSilly
 				aa[i]=a.get<u16>(i);
 			if(Ba%2)
 				aa.back()=a.get(Ba-1);
-			for(u32 i=0;i<lb/16;++i)
+			for(u32 i=0;i<Bb/2;++i)
 				bb[i]=b.get<u16>(i);
 			if(Bb%2)
 				bb.back()=b.get(Bb-1);
