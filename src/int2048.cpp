@@ -154,14 +154,14 @@ namespace reverSilly
 			str.reserve(len()*0.3);
 			auto app=[&str](u64 x)
 			{
-				for(int i=0;i<15;++i)
+				for(int i=0;i<16;++i)
 				{
 					str.push_back('0'+x%10);
 					x/=10;
 				}
 				return false;
 			};
-			for(auto res=div(*this,(u64)1e15);res.first.len()||app(res.second);res=div(res.first,(u64)1e15))
+			for(auto res=div(*this,(u64)1e16);res.first.len()||app(res.second);res=div(res.first,(u64)1e16))
 				app(res.second);
 			while(!str.empty()&&str.back()=='0')
 				str.pop_back();
