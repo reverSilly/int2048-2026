@@ -92,6 +92,16 @@ namespace reverSilly
 
 	std::vector<u64>mul(std::vector<u32>const &a,std::vector<u32>const &b)
 	{
+		if(a.size()*b.size()<(1<<8))
+		{
+			std::vector<u64>res(a.size()+b.size(),0);
+			for(u32 i=0;i<a.size();++i)
+			{
+				for(u32 j=0;j<b.size();++j)
+					res[i+j]+=a[i]*b[j];
+			}
+			return res;
+		}
 		constexpr u32 p1{167772161},p2{469762049};
 		auto r1=Mod<p1,3>::mul(a,b);
 		auto r2=Mod<p2,3>::mul(a,b);
@@ -138,7 +148,7 @@ namespace reverSilly
 		}
 		std::string Integer::str()const //reversed
 		{
-			if(len()<=64)
+			if(u32 l=len();l<64)
 			{
 				auto res=std::to_string(to<u64>());
 				for(u32 i=0;i*2<res.size();++i)
@@ -196,15 +206,15 @@ namespace reverSilly
 			u32 const B=b>>5;
 			u32 const rem=b%(1<<5);
 			a.shrink();
-			a.data.resize(ceildiv(a.len()+b,64)*8,0);
-			for(u32 i=a.data.size()/8-1;i>B;--i)
+			a.data.resize(ceildiv(a.len()+b,32)*4,0);
+			for(u32 i=a.data.size()/4-1;i>B;--i)
 			{
 				a.get<u32>(i)=a.get<u32>(i-B)<<rem;
-				a.get<u32>(i)|=a.get<u32>(i-B-1)>>(8-rem);
+				a.get<u32>(i)|=a.get<u32>(i-B-1)>>(32-rem);
 			}
-			if(a.data.size())
+			if(a.data.size()>=B*4)
 				a.get<u32>(B)=a.get<u32>(0)<<rem;
-			std::fill_n(a.data.begin(),B,0);
+			std::fill_n(a.data.begin(),B*4,0);
 			return a;
 		}
 		Integer &operator>>=(Integer &a,u32 b)
@@ -220,11 +230,19 @@ namespace reverSilly
 		}
 		Integer operator*(Integer const&a,Integer const &b)
 		{
-			std::vector<u32>aa(ceildiv(a.len(),16)),bb(ceildiv(b.len(),16));
-			for(u32 i=0;i<aa.size();++i)
+			u32 const la=a.len();
+			u32 const lb=b.len();
+			if(la+lb<=64)
+				return Integer::from(a.to<u64>()*b.to<u64>());
+			std::vector<u32>aa(ceildiv(la,16)),bb(ceildiv(lb,16));
+			for(u32 i=0;i<la/16;++i)
 				aa[i]=a.get<u16>(i);
-			for(u32 i=0;i<bb.size();++i)
+			if(la%16)
+				aa.back()=a.get(la/8);
+			for(u32 i=0;i<lb/16;++i)
 				bb[i]=b.get<u16>(i);
+			if(lb%16)
+				bb.back()=b.get(lb/8);
 			auto res=mul(aa,bb);
 			u64 carry=0;
 			for(u32 i=0;i<res.size();++i)
@@ -346,7 +364,7 @@ int2048 &int2048::minus(int2048 const &b)
 	if(b.sign<0)
 		return add(-b);
 	else if(sign<0)
-		return operator=(b-operator-());
+		return operator=((b-operator-()).operator-());
 	else
 	{
 		if(value>=b.value)
@@ -363,7 +381,7 @@ int2048 &int2048::add(int2048 const &b)
 {
 	if(b.sign<0)
 		return minus(-b);
-	if(sign<0)
+	else if(sign<0)
 		return operator=(b-(this->operator-()));
 	else
 	{

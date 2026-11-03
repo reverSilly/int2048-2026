@@ -78,7 +78,10 @@ namespace reverSilly
 			template<typename T>
 			T to()const
 			{
-        return get<T>(0);
+        T val=0;
+				for(int B=std::min(sizeof(val),data.size())-1;B>=0;--B)
+					reinterpret_cast<u8*>(&val)[B]=data[B];
+				return val;
 			}
       std::string str()const;
 			u8 get(u32 i)const
