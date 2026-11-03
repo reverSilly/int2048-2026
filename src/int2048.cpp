@@ -163,6 +163,8 @@ namespace reverSilly
 			};
 			for(auto res=div(*this,(u64)1e15);res.first.len()||app(res.second);res=div(res.first,(u64)1e15))
 				app(res.second);
+			while(!str.empty()&&str.back()=='0')
+				str.pop_back();
 			return str;
 		}
 
