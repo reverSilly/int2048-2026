@@ -45,8 +45,11 @@ namespace reverSilly
   namespace int2048
   {
     struct Integer;
+    std::vector<Integer> const&pow10();
 		Integer operator+(Integer a,Integer const &b);
 		Integer operator*(Integer const&a,Integer const &b);
+    std::strong_ordering operator<=>(Integer const &a,Integer const &b);
+
 		struct Integer//unsigned
 		{
 			std::vector<u8>data;
@@ -71,41 +74,13 @@ namespace reverSilly
 				*reinterpret_cast<T*>(res.data.data())=i;
 				return res;
 			}
-			static Integer from(std::string_view sv)//sv[0] is low
-			{
-        constexpr u32 prebuilt=19;
-				static std::vector<Integer> pow10=[]()
-				{
-          std::vector<Integer>res(prebuilt,Integer::from(10));
-          for(int i=1;i<prebuilt;++i)
-            res[i]=res[i-1]*res[i-1];
-          return res;
-				}();
-				u32 const n=sv.size();
-				if(n<=18)
-				{
-					u64 res=0;
-					for(u32 i=sv.size()-1;i<sv.size();--i)
-					{
-						res*=10;
-						res+=sv[i]-'0';
-					}
-					return Integer::from(res);
-				}
-        if(31-__manual_clz(n)>=prebuilt)
-          throw std::out_of_range("from string too long");
-				u32 cur=ceil2(n)/2;
-				Integer left=from(sv.substr(0,cur)),base=from(sv.substr(cur));
-				return left+base*pow10[31-__manual_clz(cur)];
-			}
+			static Integer from(std::string_view sv);
 			template<typename T>
 			T to()const
 			{
-				T res{};
-				for(u32 i=0;i<sizeof(T)&&i<data.size();++i)
-					reinterpret_cast<u8*>(&res)[i]=data[i];
-				return res;
+        return get<T>(0);
 			}
+      std::string str()const;
 			u8 get(u32 i)const
 			{
 				if(i<data.size())
@@ -113,12 +88,14 @@ namespace reverSilly
 				return 0;
 			}
 			template<typename T>
-			T get(u32 x)const
+			T &get(u32 x) //no out_of_bound check
 			{
-				T res;
-				for(u32 i=0;i<sizeof(T);++i)
-					reinterpret_cast<u8*>(&res)[i]=get(x*sizeof(T)+i);
-				return res;
+				return *reinterpret_cast<T*>(data.data()+x*sizeof(T));
+			}
+      template<typename T>
+			T get(u32 x)const //no out_of_bound check
+			{
+				return *reinterpret_cast<T const*>(data.data()+x*sizeof(T));
 			}
 			bool get_bit(u32 i)const
 			{
@@ -146,6 +123,7 @@ public:
   int2048(long long);
   int2048(const std::string &);
   int2048(const int2048 &);
+  int2048(int2048&&)=default;
 
   // 以下给定函数的形式参数类型仅供参考，可自行选择使用常量引用或者不使用引用
   // 如果需要，可以自行增加其他所需的函数
@@ -156,7 +134,8 @@ public:
   // 读入一个大整数
   void read(const std::string &);
   // 输出储存的大整数，无需换行
-  void print();
+  void print()const;
+  std::string str()const;
 
   // 加上一个大整数
   int2048 &add(const int2048 &);
@@ -176,31 +155,44 @@ public:
   int2048 operator-() const;
 
   int2048 &operator=(const int2048 &);
+  int2048 &operator=(int2048 &&)=default;
 
   int2048 &operator+=(const int2048 &);
-  friend int2048 operator+(int2048, const int2048 &);
+  friend int2048 operator+(int2048 const&, const int2048 &);
 
   int2048 &operator-=(const int2048 &);
-  friend int2048 operator-(int2048, const int2048 &);
+  friend int2048 operator-(int2048 const&, const int2048 &);
 
   int2048 &operator*=(const int2048 &);
   friend int2048 operator*(int2048, const int2048 &);
 
   int2048 &operator/=(const int2048 &);
-  friend int2048 operator/(int2048, const int2048 &);
+  friend int2048 operator/(const int2048&, const int2048 &);
 
   int2048 &operator%=(const int2048 &);
-  friend int2048 operator%(int2048, const int2048 &);
+  friend int2048 operator%(const int2048&, const int2048 &);
 
   friend std::istream &operator>>(std::istream &, int2048 &);
   friend std::ostream &operator<<(std::ostream &, const int2048 &);
 
-  friend bool operator==(const int2048 &, const int2048 &);
-  friend bool operator!=(const int2048 &, const int2048 &);
-  friend bool operator<(const int2048 &, const int2048 &);
-  friend bool operator>(const int2048 &, const int2048 &);
-  friend bool operator<=(const int2048 &, const int2048 &);
-  friend bool operator>=(const int2048 &, const int2048 &);
+  friend bool operator==(const int2048 &, const int2048 &)=default;
+  friend bool operator!=(const int2048 &, const int2048 &)=default;
+  friend bool operator<(const int2048 &, const int2048 &)=default;
+  friend bool operator>(const int2048 &, const int2048 &)=default;
+  friend bool operator<=(const int2048 &, const int2048 &)=default;
+  friend bool operator>=(const int2048 &, const int2048 &)=default;
+
+  friend std::strong_ordering operator<=>(int2048 const &a,int2048 const &b)
+  {
+    if(a.sign*b.sign<0)
+      return a.sign<=>b.sign;
+    if(a.sign>0)
+      return a.value<=>b.value;
+    else
+      return b.value<=>a.value;
+  }
+
+  friend std::pair<int2048,int2048>div(int2048 const &a,int2048 const &b);
 };
 } // namespace sjtu
 

@@ -1,5 +1,4 @@
 #include "int2048.h"
-#include <string_view>
 
 namespace reverSilly
 {
@@ -104,6 +103,58 @@ namespace reverSilly
 
 	namespace int2048
 	{
+		std::pair<Integer,Integer> div(Integer const &a,Integer const &b);
+
+		std::vector<Integer> const&pow10()
+		{
+			constexpr u32 prebuilt=19;
+			static std::vector<Integer> cache=[]()
+			{
+			  	std::vector<Integer>res(prebuilt,Integer::from(10));
+			  	for(u32 i=1;i<prebuilt;++i)
+					res[i]=res[i-1]*res[i-1];
+				return res;
+			}();
+			return cache;
+		}//sv[0] is low
+		Integer Integer::from(std::string_view sv)
+		{
+			u32 const n=sv.size();
+			if(n<=18)
+			{
+				u64 res=0;
+				for(u32 i=sv.size()-1;i<sv.size();--i)
+				{
+					res*=10;
+					res+=sv[i]-'0';
+				}
+				return Integer::from(res);
+			}
+			if(31-__manual_clz(n)>=pow10().size())
+				throw std::out_of_range("from string too long");
+			u32 cur=ceil2(n)/2;
+			Integer left=from(sv.substr(0,cur)),base=from(sv.substr(cur));
+			return left+base*pow10()[31-__manual_clz(cur)];
+		}
+		std::string Integer::str()const //reversed
+		{
+			if(len()<=64)
+			{
+				auto res=std::to_string(to<u64>());
+				for(u32 i=0;i*2<res.size();++i)
+					std::swap(res[i],res[res.size()-1-i]);
+				return res;
+			}
+			auto &p10=pow10();
+			int i=p10.size()-1;
+			for(;i>=0&&p10[i]>=*this;--i);
+			auto [d,r]=div(*this,p10[i]);
+			auto ds=d.str(),rs=r.str();
+			while(rs.size()<(1u<<i))
+				rs.push_back('0');
+			return rs+ds;
+		}
+
 		std::strong_ordering operator<=>(Integer const &a,Integer const &b)
 		{
 			int cur=std::max(a.data.size(),b.data.size())-1;
@@ -142,15 +193,17 @@ namespace reverSilly
 		}
 		Integer &operator<<=(Integer &a,u32 const b)
 		{
-			int B=b>>3;
+			u32 const B=b>>5;
+			u32 const rem=b%(1<<5);
 			a.shrink();
-			a.data.resize(ceildiv(a.len()+b,8),0);
-			for(int i=a.data.size()-1;i>B;--i)
+			a.data.resize(ceildiv(a.len()+b,64)*8,0);
+			for(u32 i=a.data.size()/8-1;i>B;--i)
 			{
-				a.data[i]=a.data[i-B]<<(b&0b111);
-				a.data[i]|=a.data[i-B-1]>>(8-(b&0b111));
+				a.get<u32>(i)=a.get<u32>(i-B)<<rem;
+				a.get<u32>(i)|=a.get<u32>(i-B-1)>>(8-rem);
 			}
-			a.data[B]=a.data[0]<<(b&0b111);
+			if(a.data.size())
+				a.get<u32>(B)=a.get<u32>(0)<<rem;
 			std::fill_n(a.data.begin(),B,0);
 			return a;
 		}
@@ -240,15 +293,14 @@ namespace reverSilly
 }
 
 namespace sjtu {
+
 using reverSilly::int2048::Integer;
-int2048::int2048():sign{0},value(0){}
+int2048::int2048():sign{1},value(0){}
 int2048::int2048(long long x):value(Integer::from(std::abs(x)))
 {
 	if(x<0)
 		sign=-1;
-	if(x==0)
-		sign=0;
-	if(x>0)
+	if(x>=0)
 		sign=1;
 }
 int2048::int2048(const std::string &s):value(0)
@@ -264,8 +316,6 @@ int2048::int2048(const std::string &s):value(0)
 	else
 	 	sign=1;
 	value=Integer::from(std::string_view(ss));
-	if(value.len()==0)
-		sign=0;
 }
 int2048::int2048(const int2048&)=default;
 
@@ -273,9 +323,141 @@ void int2048::read(std::string const &s)
 {
 	operator=(s);
 }
-int2048 &add(int2048 const &b)
+void int2048::print()const
 {
-	
+	std::cout<<*this;
+}
+std::string int2048::str()const
+{
+	auto s=value.str();
+	if(value.len()&&sign<0)
+		s.push_back('-');
+	for(reverSilly::u32 i=0;i*2<s.size();++i)
+		std::swap(s[i],s[s.size()-1-i]);
+	return s;
 }
 
+int2048 minus(int2048 a,int2048 const&b)
+{
+	return a.minus(b);
+}
+int2048 &int2048::minus(int2048 const &b)
+{
+	if(b.sign<0)
+		return add(-b);
+	else if(sign<0)
+		return operator=(b-operator-());
+	else
+	{
+		if(value>=b.value)
+			value-=b.value;
+		else
+		{
+			value=b.value-value;
+			sign=-1;
+		}
+		return *this;
+	}
+}
+int2048 &int2048::add(int2048 const &b)
+{
+	if(b.sign<0)
+		return minus(-b);
+	if(sign<0)
+		return operator=(b-(this->operator-()));
+	else
+	{
+		value+=b.value;
+		return *this;
+	}
+}
+int2048 add(int2048 a,int2048 const &b)
+{
+	a.add(b);
+	return a;
+}
+int2048 int2048::operator+()const
+{
+	return *this;
+}
+int2048	int2048::operator-()const
+{
+	int2048 res(*this);
+	res.sign=-sign;
+	return res;
+}
+int2048 &int2048::operator=(int2048 const&)=default;
+
+int2048 &int2048::operator+=(const int2048 &b)
+{
+	return add(b);
+}
+int2048 operator+(int2048 const &a,int2048 const &b)
+{
+	return add(a,b);
+}
+int2048 &int2048::operator-=(const int2048 &b)
+{
+	return minus(b);
+}
+int2048 operator-(int2048 const &a, const int2048 &b)
+{
+	return minus(a,b);
+}
+
+int2048 &int2048::operator*=(const int2048 &a)
+{
+	value=value*a.value;
+	sign=sign*a.sign;
+	return *this;
+}
+int2048 operator*(int2048 a,const int2048 &b)
+{
+	return a*=b;
+}
+
+std::pair<int2048,int2048>div(int2048 const &a,int2048 const &b)
+{
+	auto[d,r]=div(a.value,b.value);
+	if(r.len()!=0&&a.sign*b.sign<0)
+	{
+		d+=Integer::from(1);
+		r=b.value-r;
+	}
+	int2048 aa,bb;
+	aa.sign=a.sign*b.sign;
+	aa.value=d;
+	bb.value=r;
+	return {std::move(aa),std::move(bb)};
+}
+
+int2048 &int2048::operator/=(const int2048 &b)
+{
+	return operator=(*this/b);
+}
+int2048 operator/(int2048 const &a,int2048 const&b)
+{
+	return div(a,b).first;
+}
+
+int2048 &int2048::operator%=(const int2048 &b)
+{
+	return operator=(*this%b);
+}
+int2048 operator%(int2048 const &a,int2048 const &b)
+{
+	return div(a,b).second;
+}
+
+std::istream &operator>>(std::istream &is,int2048 &a)
+{
+	std::string s;
+	is>>s;
+	a=s;
+	return is;
+}
+std::ostream &operator<<(std::ostream &os,const int2048 &a)
+{
+	return os<<a.str();
+}
 } // namespace sjtu
