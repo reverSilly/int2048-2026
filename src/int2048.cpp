@@ -150,7 +150,7 @@ namespace reverSilly
 		{
 			std::string str;
 			str.reserve(len()*0.3);
-			for(auto res=div(*this,10ull);res.first.len();res=div(res.first,10ull))
+			for(auto res=div(*this,10ull);res.first.len()||(str.push_back('0'+res.second.to<u8>()),false);res=div(res.first,10ull))
 				str.push_back('0'+res.second.to<u8>());
 			return str;
 		}
