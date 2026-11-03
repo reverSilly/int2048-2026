@@ -73,13 +73,14 @@ namespace reverSilly
 			}
 			static Integer from(std::string_view sv)//sv[0] is low
 			{
-        static std::vector<Integer> pow10=[]()
-        {
-          std::vector<Integer>res(20,Integer::from(10));
-          for(int i=1;i<20;++i)
+        constexpr u32 prebuilt=19;
+				static std::vector<Integer> pow10=[]()
+				{
+          std::vector<Integer>res(prebuilt,Integer::from(10));
+          for(int i=1;i<prebuilt;++i)
             res[i]=res[i-1]*res[i-1];
           return res;
-        }();
+				}();
 				u32 const n=sv.size();
 				if(n<=18)
 				{
@@ -91,6 +92,8 @@ namespace reverSilly
 					}
 					return Integer::from(res);
 				}
+        if(31-__manual_clz(n)>=prebuilt)
+          throw std::out_of_range("from string too long");
 				u32 cur=ceil2(n)/2;
 				Integer left=from(sv.substr(0,cur)),base=from(sv.substr(cur));
 				return left+base*pow10[31-__manual_clz(cur)];

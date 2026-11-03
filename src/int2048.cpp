@@ -191,23 +191,21 @@ namespace reverSilly
 			return res1;
 		}
 		Integer operator<<(Integer a,u32 b);
-		std::pair<Integer,Integer> div(Integer a,Integer const &b)
+		std::pair<Integer,Integer> div(Integer const &a,Integer const &b)
 		{
 			if(b.len()==0)
 				throw std::invalid_argument("divided by zero.");
-			int bit=a.len()-b.len();
-			if(bit<0)
-				return {Integer(0),std::move(a)};
-			Integer res(ceildiv(bit+1,8)),Bsh{b<<bit};
-			for(;bit>=0;Bsh>>=1,--bit)
+			int bit=a.len()-1;
+			Integer res(ceildiv(bit+1,8)),rem(0);
+			for(;bit>=0;--bit,rem<<=1,rem.set_bit(0,a.get_bit(bit)))
 			{
-				if(a>=Bsh)
+				if(rem>=b)
 				{
-					a-=Bsh;
+					rem-=b;
 					res.set_bit(bit,true);
 				}
 			}
-			return {std::move(res),std::move(a)};
+			return {std::move(res),std::move(rem)};
 		}
 		Integer operator/(Integer const &a,Integer const &b)
 		{
