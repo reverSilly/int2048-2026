@@ -148,10 +148,9 @@ namespace reverSilly
 		}
 		std::string Integer::str()const //reversed
 		{
-			static Integer const _10=Integer::from(10);
 			std::string str;
 			str.reserve(len()*0.3);
-			for(auto res=div(*this,_10);res.first.len();res=div(res.first,_10))
+			for(auto res=div(*this,10ull);res.first.len();res=div(res.first,10ull))
 				str.push_back('0'+res.second.to<u8>());
 			return str;
 		}
@@ -263,9 +262,8 @@ namespace reverSilly
 		{
 			if(b.len()==0)
 				throw std::invalid_argument("divided by zero.");
-			int bit=a.len()-1;
-			Integer res(ceildiv(bit+1,8)),rem(0);
-			for(;bit>=0;--bit)
+			Integer res(a.data.size()),rem(0);
+			for(int bit=a.len()-1;bit>=0;--bit)
 			{
 				rem<<=1;
 				rem.set_bit(0,a.get_bit(bit));
@@ -278,6 +276,23 @@ namespace reverSilly
 			res.shrink();
 			rem.shrink();
 			return {std::move(res),std::move(rem)};
+		}
+		template<typename T>
+		std::pair<Integer,T>div(Integer const &a,T b)
+		{
+			if(b.len()==0)
+				throw std::invalid_argument("divided by zero.");
+			Integer res(a.data.size());
+			T rem=0;
+			for(int i=a.data.size();i>=0;--i)
+			{
+				rem<<=8;
+				rem|=a.data[i];
+				res.data[i]=rem/b;
+				res%=b;
+			}
+			res.shrink();
+			return {std::move(res),rem};
 		}
 		Integer operator/(Integer const &a,Integer const &b)
 		{
