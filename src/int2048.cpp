@@ -1,4 +1,5 @@
 #include "int2048.h"
+#include <string_view>
 
 namespace reverSilly
 {
@@ -139,17 +140,17 @@ namespace reverSilly
 			a.shrink();
 			return a;
 		}
-		Integer &operator<<=(Integer &a,u32 b)
+		Integer &operator<<=(Integer &a,u32 const b)
 		{
 			int B=b>>3;
 			a.shrink();
 			a.data.resize(ceildiv(a.len()+b,8),0);
-			for(int i=a.data.size()-1;i>=B;--i)
+			for(int i=a.data.size()-1;i>B;--i)
 			{
 				a.data[i]=a.data[i-B]<<(b&0b111);
-				if(i-B>0)
-					a.data[i]|=a.data[i-B-1]>>(8-(b&0b111));
+				a.data[i]|=a.data[i-B-1]>>(8-(b&0b111));
 			}
+			a.data[B]=a.data[0]<<(b&0b111);
 			std::fill_n(a.data.begin(),B,0);
 			return a;
 		}
@@ -197,14 +198,18 @@ namespace reverSilly
 				throw std::invalid_argument("divided by zero.");
 			int bit=a.len()-1;
 			Integer res(ceildiv(bit+1,8)),rem(0);
-			for(;bit>=0;--bit,rem<<=1,rem.set_bit(0,a.get_bit(bit)))
+			for(;bit>=0;--bit)
 			{
+				rem<<=1;
+				rem.set_bit(0,a.get_bit(bit));
 				if(rem>=b)
 				{
 					rem-=b;
 					res.set_bit(bit,true);
 				}
 			}
+			res.shrink();
+			rem.shrink();
 			return {std::move(res),std::move(rem)};
 		}
 		Integer operator/(Integer const &a,Integer const &b)
@@ -263,5 +268,14 @@ int2048::int2048(const std::string &s):value(0)
 		sign=0;
 }
 int2048::int2048(const int2048&)=default;
+
+void int2048::read(std::string const &s)
+{
+	operator=(s);
+}
+int2048 &add(int2048 const &b)
+{
+	
+}
 
 } // namespace sjtu
