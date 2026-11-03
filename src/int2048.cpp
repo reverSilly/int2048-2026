@@ -114,8 +114,10 @@ namespace reverSilly
 	namespace int2048
 	{
 		std::pair<Integer,Integer> div(Integer const &a,Integer const &b);
+		template<typename T>
+		std::pair<Integer,T>div(Integer const &a,T b);
 
-		std::vector<Integer> const&pow10()
+		std::vector<Integer> const &pow10()
 		{
 			constexpr u32 prebuilt=19;
 			static std::vector<Integer> cache=[]()
@@ -150,8 +152,8 @@ namespace reverSilly
 		{
 			std::string str;
 			str.reserve(len()*0.3);
-			for(auto res=div(*this,10ull);res.first.len()||(str.push_back('0'+res.second.to<u8>()),false);res=div(res.first,10ull))
-				str.push_back('0'+res.second.to<u8>());
+			for(auto res=div(*this,10ull);res.first.len()||(str.push_back('0'+res.second),false);res=div(res.first,10ull))
+				str.push_back('0'+res.second);
 			return str;
 		}
 
@@ -280,7 +282,7 @@ namespace reverSilly
 		template<typename T>
 		std::pair<Integer,T>div(Integer const &a,T b)
 		{
-			if(b.len()==0)
+			if(b==0)
 				throw std::invalid_argument("divided by zero.");
 			Integer res(a.data.size());
 			T rem=0;
@@ -289,7 +291,7 @@ namespace reverSilly
 				rem<<=8;
 				rem|=a.data[i];
 				res.data[i]=rem/b;
-				res%=b;
+				rem%=b;
 			}
 			res.shrink();
 			return {std::move(res),rem};
