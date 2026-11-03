@@ -49,6 +49,10 @@ namespace reverSilly
 		Integer operator+(Integer a,Integer const &b);
 		Integer operator*(Integer const&a,Integer const &b);
     std::strong_ordering operator<=>(Integer const &a,Integer const &b);
+    inline bool operator==(Integer const &a,Integer const &b)
+    {
+      return (a<=>b)==0;
+    }
 
 		struct Integer//unsigned
 		{

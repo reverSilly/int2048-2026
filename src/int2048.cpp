@@ -207,12 +207,17 @@ namespace reverSilly
 			u32 const rem=b%(1<<5);
 			a.shrink();
 			a.data.resize(ceildiv(a.len()+b,32)*4,0);
-			for(u32 i=a.data.size()/4-1;i>B;--i)
+			if(rem)
 			{
-				a.get<u32>(i)=a.get<u32>(i-B)<<rem;
-				a.get<u32>(i)|=a.get<u32>(i-B-1)>>(32-rem);
+				for(u32 i=a.data.size()/4-1;i>B;--i)
+				{
+					a.get<u32>(i)=a.get<u32>(i-B)<<rem;
+					a.get<u32>(i)|=a.get<u32>(i-B-1)>>(32-rem);
+				}
 			}
-			if(a.data.size()>=B*4)
+			else  for(u32 i=a.data.size()/4-1;i>B;--i)
+				a.get<u32>(i)=a.get<u32>(i-B);
+			if(a.data.size()>=B*4+4)
 				a.get<u32>(B)=a.get<u32>(0)<<rem;
 			std::fill_n(a.data.begin(),B*4,0);
 			return a;
@@ -230,19 +235,19 @@ namespace reverSilly
 		}
 		Integer operator*(Integer const&a,Integer const &b)
 		{
-			u32 const la=a.len();
-			u32 const lb=b.len();
+			u32 const la=a.len(),Ba=ceildiv(la,8);
+			u32 const lb=b.len(),Bb=ceildiv(lb,8);
 			if(la+lb<=64)
 				return Integer::from(a.to<u64>()*b.to<u64>());
 			std::vector<u32>aa(ceildiv(la,16)),bb(ceildiv(lb,16));
-			for(u32 i=0;i<la/16;++i)
+			for(u32 i=0;i<Ba/2;++i)
 				aa[i]=a.get<u16>(i);
-			if(la%16)
-				aa.back()=a.get(la/8);
+			if(Ba%2)
+				aa.back()=a.get(Ba-1);
 			for(u32 i=0;i<lb/16;++i)
 				bb[i]=b.get<u16>(i);
-			if(lb%16)
-				bb.back()=b.get(lb/8);
+			if(Bb%2)
+				bb.back()=b.get(Bb-1);
 			auto res=mul(aa,bb);
 			u64 carry=0;
 			for(u32 i=0;i<res.size();++i)
@@ -364,7 +369,12 @@ int2048 &int2048::minus(int2048 const &b)
 	if(b.sign<0)
 		return add(-b);
 	else if(sign<0)
-		return operator=((b-operator-()).operator-());
+	{
+		sign=-sign;
+		add(b);
+		sign=-sign;
+		return *this;
+	}
 	else
 	{
 		if(value>=b.value)
