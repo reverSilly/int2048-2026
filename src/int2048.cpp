@@ -148,21 +148,12 @@ namespace reverSilly
 		}
 		std::string Integer::str()const //reversed
 		{
-			if(u32 l=len();l<64)
-			{
-				auto res=std::to_string(to<u64>());
-				for(u32 i=0;i*2<res.size();++i)
-					std::swap(res[i],res[res.size()-1-i]);
-				return res;
-			}
-			auto &p10=pow10();
-			int i=p10.size()-1;
-			for(;i>=0&&p10[i]>=*this;--i);
-			auto [d,r]=div(*this,p10[i]);
-			auto ds=d.str(),rs=r.str();
-			while(rs.size()<(1u<<i))
-				rs.push_back('0');
-			return rs+ds;
+			static Integer const _10=Integer::from(10);
+			std::string str;
+			str.reserve(len()*0.3);
+			for(auto res=div(*this,_10);res.first.len();res=div(res.first,_10))
+				str.push_back('0'+res.second.to<u8>());
+			return str;
 		}
 
 		std::strong_ordering operator<=>(Integer const &a,Integer const &b)
@@ -353,6 +344,8 @@ void int2048::print()const
 std::string int2048::str()const
 {
 	auto s=value.str();
+	if(s.empty())
+		s="0";
 	if(value.len()&&sign<0)
 		s.push_back('-');
 	for(reverSilly::u32 i=0;i*2<s.size();++i)
