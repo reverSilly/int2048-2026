@@ -66,31 +66,22 @@ namespace reverSilly
 			return a;
 		}
 		template<bool iNTT>
-		static std::vector<u32> NTT(std::vector<u32>const &a)//assert a.size() is 2pow
+		static void NTT(u32 *a,u32 n)//assert a.size() is 2pow
 		{
 			static std::vector<u32>w=Mod<p,g>::construct<false>(),iw=Mod<p,g>::construct<true>();
-			u32 const n=a.size();
-			if(n==0)
-				return {};
-			if(n==1)
-				return a;
-			std::vector<u32>a0(n/2),a1(n/2),res(n);
-			for(u32 i=0;i<n;i+=2)
-			{
-				a0[i/2]=a[i];
-				a1[i/2]=a[i+1];
-			}
+			if(n==0||n==1)
+				return;
+			NTT<iNTT>(a,n/2);
+			NTT<iNTT>(a+n/2,n/2);
 			u64 W=w[__manual_clz(n)],ww=1;
 			if constexpr(iNTT)
 				W=iw[__manual_clz(n)];
-			a0=NTT<iNTT>(a0);
-			a1=NTT<iNTT>(a1);
 			for(u32 i=0;i<n/2;++i,ww=ww*W%p)
 			{
-				res[i]=(a0[i]+ww*a1[i])%p;
-				res[i+n/2]=((a0[i]+u64(p)-ww*a1[i]%p)%p+p)%p;
+				u64 const G=a[i],H=a[i+n/2];
+				a[i]=(G+ww*H)%p;
+				a[i+n/2]=(G+u64(p)-ww*H%p)%p;
 			}
-			return res;
 		}
 		static std::vector<u32>mul(std::vector<u32> a,std::vector<u32> b)
 		{
@@ -99,11 +90,11 @@ namespace reverSilly
 				throw std::out_of_range("integer too big");
 			a.resize(n,0);
 			b.resize(n,0);
-			a=NTT<false>(a);
-			b=NTT<false>(b);
+			NTT<false>(a.data(),n);
+			NTT<false>(b.data(),n);
 			for(u32 i=0;i<n;++i)
 				a[i]=u64(a[i])*b[i]%p;
-			a=NTT<true>(a);
+			NTT<true>(a.data(),n);
 			for(u32 i=0,in=inv(n);i<n;++i)
 				a[i]=u64(a[i])*in%p;
 			return a;
