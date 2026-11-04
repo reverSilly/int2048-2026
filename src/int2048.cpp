@@ -80,7 +80,7 @@ namespace reverSilly
 			{
 				u64 const G=a[i],H=a[i+n/2];
 				a[i]=(G+ww*H)%p;
-				a[i+n/2]=(G+u64(p)-ww*H%p)%p;
+				a[i+n/2]=(G+p-ww*H%p)%p;
 			}
 		}
 		static std::vector<u32>mul(std::vector<u32> a,std::vector<u32> b)
@@ -90,10 +90,13 @@ namespace reverSilly
 				throw std::out_of_range("integer too big");
 			a.resize(n,0);
 			b.resize(n,0);
+			reverse(a);
+			reverse(b);
 			NTT<false>(a.data(),n);
 			NTT<false>(b.data(),n);
 			for(u32 i=0;i<n;++i)
 				a[i]=u64(a[i])*b[i]%p;
+			reverse(a);
 			NTT<true>(a.data(),n);
 			for(u32 i=0,in=inv(n);i<n;++i)
 				a[i]=u64(a[i])*in%p;
