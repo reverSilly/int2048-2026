@@ -9,6 +9,7 @@ namespace reverSilly
 		return a/b+1;
 	}
 	void reverse(std::vector<u32>&v)
+	// https://oiwiki.org/math/poly/fft/
 	{
 		//(v.size()==lowbit(v.size()));
 		for(u32 i=0,r=0;i<v.size();++i)
