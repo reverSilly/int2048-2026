@@ -195,10 +195,17 @@ namespace reverSilly
 		Integer &operator-=(Integer &a,Integer const &b)//asserts a>=b
 		{
 			bool carry=false;
-			for(u32 i=0;i<a.data.size();++i)
+			u32 i=0;
+			for(;i<b.data.size();++i)
 			{
-				bool nxcarry=(a.data[i]-carry-b.get(i))<0;
-				a.data[i]-=b.get(i)+carry;
+				bool nxcarry=(a.data[i]-carry-b.data[i])<0;
+				a.data[i]-=b.data[i]+carry;
+				carry=nxcarry;
+			}
+			for(;carry&&i<a.data.size();++i)
+			{
+				bool nxcarry=(a.data[i]-carry)<0;
+				a.data[i]-=carry;
 				carry=nxcarry;
 			}
 			a.shrink();
