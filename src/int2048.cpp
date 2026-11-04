@@ -199,9 +199,10 @@ namespace reverSilly
 			bool carry=false;
 			for(u32 i=0;i*8<a.data.size();++i)
 			{
-				u64 const bef=a.get<u64>(i);
-				a.get<u64>(i)-=carry+b.get<u64>(i);
-				carry=(bef>=a.get<u64>(i));
+				u64 &c=a.get<u64>(i);
+				u64 const bef=c;
+				c-=carry+b.get<u64>(i);
+				carry=(bef<c);
 			}
 			a.shrink();
 			return a;

@@ -19,104 +19,106 @@
 
 namespace reverSilly 
 {
-	using u8=unsigned char;
-	using u16=unsigned short;
-	using u32=unsigned int;
-	using u64=unsigned long long;
+  using u8=unsigned char;
+  using u16=unsigned short;
+  using u32=unsigned int;
+  using u64=unsigned long long;
   template<typename T>
-	u32 __manual_clz(T x)
-	{
-		for(u32 i=0;i<8*sizeof(T);++i)
-			if(x&(1ull<<(sizeof(T)*8-1-i)))
-				return i;
-		return 8*sizeof(T);
-	}
-	template<typename T>
-	T lowbit(T x)
-	{
-		return x&-x;
-	}
-	inline u32 ceil2(u32 x)
-	{
-		if(x==lowbit(x))
-			return x;
-		return 1u<<(32-__manual_clz(x));
-	}
+  u32 __manual_clz(T x)
+  {
+    for(u32 i=0;i<8*sizeof(T);++i)
+      if(x&(1ull<<(sizeof(T)*8-1-i)))
+        return i;
+    return 8*sizeof(T);
+  }
+  template<typename T>
+  T lowbit(T x)
+  {
+    return x&-x;
+  }
+  inline u32 ceil2(u32 x)
+  {
+    if(x==lowbit(x))
+      return x;
+    return 1u<<(32-__manual_clz(x));
+  }
   namespace int2048
   {
     struct Integer;
     std::vector<Integer> const&pow10();
-		Integer operator+(Integer a,Integer const &b);
-		Integer operator*(Integer const&a,Integer const &b);
+    Integer operator+(Integer a,Integer const &b);
+    Integer operator*(Integer const&a,Integer const &b);
     std::strong_ordering operator<=>(Integer const &a,Integer const &b);
     inline bool operator==(Integer const &a,Integer const &b)
     {
       return (a<=>b)==0;
     }
 
-		struct Integer//unsigned
-		{
-			std::vector<u8>data;
-			Integer(u32 n):data(n){}
-			void shrink()
-			{
-				while(!data.empty()&&data.back()==0)
-					data.pop_back();
-			}
-			u32 len()const
-			{
-				int i=data.size()-1;
-				for(;i>=0&&data[i]==0;--i);
-				if(i<0)
-					return 0;
-				return i*8+8-__manual_clz(data[i]);
-			}
-			template<typename T>
-			static Integer from(T i)
-			{
-				Integer res(sizeof(T));
-				*reinterpret_cast<T*>(res.data.data())=i;
-				return res;
-			}
-			static Integer from(std::string_view sv);
-			template<typename T>
-			T to()const
-			{
-        return get<T>(0);
-			}
-      std::string str()const;
-			u8 get(u32 i)const
-			{
-				if(i<data.size())
-					return data[i];
-				return 0;
-			}
-			template<typename T>
-			T &get(u32 x) //no out_of_bound check
-			{
-				return *reinterpret_cast<T*>(data.data()+x*sizeof(T));
-			}
+    struct Integer//unsigned
+    {
+      std::vector<u8>data;
+      Integer(u32 n):data(n){}
+      void shrink()
+      {
+        while(!data.empty()&&data.back()==0)
+          data.pop_back();
+      }
+      u32 len()const
+      {
+        int i=data.size()-1;
+        for(;i>=0&&data[i]==0;--i);
+        if(i<0)
+          return 0;
+        return i*8+8-__manual_clz(data[i]);
+      }
       template<typename T>
-			T get(u32 x)const //no out_of_bound check
-			{
+      static Integer from(T i)
+      {
+        Integer res(sizeof(T));
+        *reinterpret_cast<T*>(res.data.data())=i;
+        return res;
+      }
+      static Integer from(std::string_view sv);
+      template<typename T>
+      T to()const
+      {
+        return get<T>(0);
+      }
+      std::string str()const;
+      u8 get(u32 i)const
+      {
+        if(i<data.size())
+          return data[i];
+        return 0;
+      }
+      template<typename T>
+      T &get(u32 x) //no out_of_bound check
+      {
+        return *reinterpret_cast<T*>(data.data()+x*sizeof(T));
+      }
+      template<typename T>
+      T get(u32 x)const //with out_of_bound check
+      {
         auto base=x*sizeof(T);
         T val=0;
+        if(base>=data.size())
+          return val;
         std::memcpy(&val,data.data()+base,
-                    std::min(sizeof(val),data.size()-base));
-				return val;
-			}
-			bool get_bit(u32 i)const
-			{
-				return (get(i>>3)>>(i&0b111))&1;
-			}
-			void set_bit(u32 i,bool v)
-			{
-				if(v)
-					data[i>>3]|=1<<(i&0b111);
-				else
-					data[i>>3]&=~(1<<(i&0b111));
-			}
-		};
+            std::min(sizeof(val),data.size()-base));
+        return val;
+      }
+      bool get_bit(u32 i)const
+      {
+        return (get(i>>3)>>(i&0b111))&1;
+      }
+      void set_bit(u32 i,bool v)
+      {
+        if(v)
+          data[i>>3]|=1<<(i&0b111);
+        else
+          data[i>>3]&=~(1<<(i&0b111));
+      }
+    };
   }
 }
 
@@ -192,12 +194,12 @@ public:
 
   friend std::strong_ordering operator<=>(int2048 const &a,int2048 const &b)
   {
-    if(a.sign*b.sign<0)
-      return a.sign<=>b.sign;
-    if(a.sign>0)
-      return a.value<=>b.value;
-    else
-      return b.value<=>a.value;
+  if(a.sign*b.sign<0)
+    return a.sign<=>b.sign;
+  if(a.sign>0)
+    return a.value<=>b.value;
+  else
+    return b.value<=>a.value;
   }
 
   friend std::pair<int2048,int2048>div(int2048 const &a,int2048 const &b);
