@@ -331,10 +331,11 @@ namespace reverSilly
 			if(la==0)
 				return {Integer(0),Integer(0)};
 			Integer x=_1;
-			u32 len=lD,precision=lD;
+			u32 len=lD,precision=1;
 			// means X(\in R) eq x/2^len
-			// |X-1/D|<=2^{-precision}
-			for(;precision<la;)
+			// |X-1/D|<=2^{-precision-lD}
+			// DX'-1<(DX-1)^2
+			for(;precision+lD<=la;)
 			{
 				x=x*((_1<<(len+1))-x*D);
 				len<<=1;
