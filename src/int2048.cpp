@@ -240,7 +240,7 @@ namespace reverSilly
 				if(a.data.size()>=B*8+8)
 					a.get<u64>(B)=a.get<u64>(0)<<rem;
 			}
-			else for(u32 i=a.data.size()/8-1;i>=B;--i)
+			else if(B) for(u32 i=a.data.size()/8-1;i>=B;--i)
 				a.get<u64>(i)=a.get<u64>(i-B);
 			std::fill_n(a.data.begin(),B*8,0);
 			return a;
@@ -331,8 +331,8 @@ namespace reverSilly
 			if(la==0)
 				return {Integer(0),Integer(0)};
 			Integer x=_1;
-			u32 len=lD,precision=1;//means X(\in R) eq x/2^len
-			for(;precision<=len;)
+			u32 len=lD,precision=lD;//means X(\in R) eq x/2^len
+			for(;precision<la;)
 			{
 				x=x*((_1<<(len+1))-x*D);
 				len<<=1;
