@@ -82,10 +82,7 @@ namespace reverSilly
 			template<typename T>
 			T to()const
 			{
-        T val=0;
-				for(int B=std::min(sizeof(val),data.size())-1;B>=0;--B)
-					reinterpret_cast<u8*>(&val)[B]=data[B];
-				return val;
+        return get<T>(0);
 			}
       std::string str()const;
 			u8 get(u32 i)const
@@ -102,7 +99,11 @@ namespace reverSilly
       template<typename T>
 			T get(u32 x)const //no out_of_bound check
 			{
-				return *reinterpret_cast<T const*>(data.data()+x*sizeof(T));
+        auto base=x*sizeof(T);
+        T val=0;
+        std::memcpy(&val,data.data()+base,
+                    std::min(sizeof(val),data.size()-base));
+				return val;
 			}
 			bool get_bit(u32 i)const
 			{

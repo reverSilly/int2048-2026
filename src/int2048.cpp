@@ -194,42 +194,37 @@ namespace reverSilly
 		}
 		Integer &operator-=(Integer &a,Integer const &b)//asserts a>=b
 		{
+			u32 const al=a.len();
+			a.data.resize(ceildiv(al,64)*8,0);
 			bool carry=false;
-			u32 i=0;
-			for(;i<b.data.size();++i)
+			for(u32 i=0;i*8<a.data.size();++i)
 			{
-				bool nxcarry=(a.data[i]-carry-b.data[i])<0;
-				a.data[i]-=b.data[i]+carry;
-				carry=nxcarry;
-			}
-			for(;carry&&i<a.data.size();++i)
-			{
-				bool nxcarry=(a.data[i]-carry)<0;
-				a.data[i]-=carry;
-				carry=nxcarry;
+				u64 const bef=a.get<u64>(i);
+				a.get<u64>(i)-=carry+b.get<u64>(i);
+				carry=(bef>=a.get<u64>(i));
 			}
 			a.shrink();
 			return a;
 		}
 		Integer &operator<<=(Integer &a,u32 const b)
 		{
-			u32 const B=b>>5;
-			u32 const rem=b%(1<<5);
+			u32 const B=b>>6;
+			u32 const rem=b%(1<<6);
 			a.shrink();
-			a.data.resize(ceildiv(a.len()+b,32)*4,0);
+			a.data.resize(ceildiv(a.len()+b,64)*8,0);
 			if(rem)
 			{
-				for(u32 i=a.data.size()/4-1;i>B;--i)
+				for(u32 i=a.data.size()/8-1;i>B;--i)
 				{
-					a.get<u32>(i)=a.get<u32>(i-B)<<rem;
-					a.get<u32>(i)|=a.get<u32>(i-B-1)>>(32-rem);
+					a.get<u64>(i)=a.get<u64>(i-B)<<rem;
+					a.get<u64>(i)|=a.get<u64>(i-B-1)>>(64-rem);
 				}
 			}
-			else  for(u32 i=a.data.size()/4-1;i>B;--i)
-				a.get<u32>(i)=a.get<u32>(i-B);
-			if(a.data.size()>=B*4+4)
-				a.get<u32>(B)=a.get<u32>(0)<<rem;
-			std::fill_n(a.data.begin(),B*4,0);
+			else  for(u32 i=a.data.size()/8-1;i>B;--i)
+				a.get<u64>(i)=a.get<u64>(i-B);
+			if(a.data.size()>=B*8+8)
+				a.get<u64>(B)=a.get<u64>(0)<<rem;
+			std::fill_n(a.data.begin(),B*8,0);
 			return a;
 		}
 		Integer &operator>>=(Integer &a,u32 b)
