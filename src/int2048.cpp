@@ -187,9 +187,9 @@ namespace reverSilly
 			for(u32 i=0;i*8<a.data.size();++i)
 			{
 				u64 &c=a.get<u64>(i);
-				u64 const bef=c;
-				c+=b.get<u64>(i)+carry;
-				carry=bef>c;
+				u64 const bef=c,bi=b.get<u64>(i);
+				c+=bi+carry;
+				carry=(bef>c)|(bi+carry<bi);
 			}
 			return a;
 		}
@@ -201,9 +201,9 @@ namespace reverSilly
 			for(u32 i=0;i*8<a.data.size();++i)
 			{
 				u64 &c=a.get<u64>(i);
-				u64 const bef=c;
-				c-=carry+b.get<u64>(i);
-				carry=(bef<c);
+				u64 const bef=c,bi=b.get<u64>(i);
+				c-=carry+bi;
+				carry=(bef<c)|(bi+carry<bi);
 			}
 			a.shrink();
 			return a;
