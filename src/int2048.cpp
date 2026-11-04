@@ -166,22 +166,21 @@ namespace reverSilly
 		}
 		std::string Integer::str()const //reversed
 		{
-			std::string str;
-			str.reserve(len()*0.3);
-			auto app=[&str](u64 x)
+			if(u32 l=len();l<64)
 			{
-				for(int i=0;i<16;++i)
-				{
-					str.push_back('0'+x%10);
-					x/=10;
-				}
-				return false;
-			};
-			for(auto res=div(*this,(u64)1e16);res.first.len()||app(res.second);res=div(res.first,(u64)1e16))
-				app(res.second);
-			while(!str.empty()&&str.back()=='0')
-				str.pop_back();
-			return str;
+				auto res=std::to_string(to<u64>());
+				for(u32 i=0;i*2<res.size();++i)
+					std::swap(res[i],res[res.size()-1-i]);
+				return res;
+			}
+			auto &p10=pow10();
+			int i=p10.size()-1;
+			for(;i>=0&&p10[i]>=*this;--i);
+			auto [d,r]=div(*this,p10[i]);
+			auto ds=d.str(),rs=r.str();
+			while(rs.size()<(1u<<i))
+				rs.push_back('0');
+			return rs+ds;
 		}
 
 		std::strong_ordering operator<=>(Integer const &a,Integer const &b)
