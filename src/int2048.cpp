@@ -130,6 +130,8 @@ namespace reverSilly
 		std::pair<Integer,Integer> div(Integer const &a,Integer const &b);
 		template<typename T>
 		std::pair<Integer,T>div(Integer const &a,T b);
+		Integer operator-(Integer a,Integer const &b);
+		Integer operator>>(Integer a,u32 b);
 
 		std::vector<Integer> const &pow10()
 		{
@@ -236,7 +238,7 @@ namespace reverSilly
 					a.get<u64>(i)|=a.get<u64>(i-B-1)>>(64-rem);
 				}
 			}
-			else  for(u32 i=a.data.size()/8-1;i>B;--i)
+			else for(u32 i=a.data.size()/8-1;i>B;--i)
 				a.get<u64>(i)=a.get<u64>(i-B);
 			if(a.data.size()>=B*8+8)
 				a.get<u64>(B)=a.get<u64>(0)<<rem;
@@ -245,11 +247,24 @@ namespace reverSilly
 		}
 		Integer &operator>>=(Integer &a,u32 b)
 		{
-			int B=b>>3;
-			for(u32 i=0;i<a.data.size();++i)
+			u32 const B=b>>6;
+			u32 const rem=b%(1<<6);
+			a.shrink();
+			a.data.resize(ceildiv(a.len()+b,64)*8,0);
+			if(rem)
 			{
-				a.data[i]=a.get(i+B)>>(b&0b111);
-				a.data[i]|=a.get(i+B+1)<<(8-(b&0b111));
+				for(u32 i=0;(i+B+1)*8<a.data.size();++i)
+				{
+					a.get<u64>(i)=a.get<u64>(i+B)>>rem;
+					a.get<u64>(i)|=a.get<u64>(i+B+1)<<(64-rem);
+				}
+			}
+			else for(u32 i=0;i*8<a.data.size();++i)
+				a.get<u64>(i)=a.get<u64>(i+B);
+			if(a.data.size()>=B*8+8)
+			{
+				u64 const iback=a.data.size()/8-1;
+				a.get<u64>(iback-B)=a.get<u64>(iback)>>rem;
 			}
 			a.shrink();
 			return a;
@@ -289,7 +304,7 @@ namespace reverSilly
 			return res1;
 		}
 		Integer operator<<(Integer a,u32 b);
-		std::pair<Integer,Integer> div(Integer const &a,Integer const &b)
+		std::pair<Integer,Integer> div_plain(Integer const &a,Integer const &b)
 		{
 			if(b.len()==0)
 				throw std::invalid_argument("divided by zero.");
@@ -307,6 +322,42 @@ namespace reverSilly
 			res.shrink();
 			rem.shrink();
 			return {std::move(res),std::move(rem)};
+		}
+		// https://chat.deepseek.com/share/zl3qgw9x663nryo7am
+		std::pair<Integer,Integer> div_newton(Integer const &a,Integer const &D)
+		{
+			static Integer const _1=Integer::from(1);
+			u32 const la=a.len(),lD=D.len();
+			if(la==0)
+				return {Integer(0),Integer(0)};
+			Integer x=_1;
+			u32 len=lD,precision=1;//means X(\in R) eq x/2^len
+			for(;precision<la;)
+			{
+				x=x*((_1<<(len+1))-x*D);
+				len<<=1;
+				precision<<=1;
+				if(u32 lx=x.len();lx>precision)
+				{
+					x>>=lx-precision;
+					len-=lx-precision;
+				}
+			}
+			Integer d=(a*x)>>len,r=a-D*d;
+			while(r>=D)
+			{
+				d+=_1;
+				r-=D;
+			}
+			return {std::move(d),std::move(r)};
+		}
+		std::pair<Integer,Integer> div(Integer const &a,Integer const &b)
+		{
+			constexpr u64 lim=1ull<<10;
+			if(a.data.size()*b.data.size()<lim)
+				return div_plain(a,b);
+			else
+			 	return div_newton(a,b);
 		}
 		template<typename T>
 		std::pair<Integer,T>div(Integer const &a,T b)
