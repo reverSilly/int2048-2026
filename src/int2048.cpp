@@ -132,11 +132,13 @@ namespace reverSilly
 		std::pair<Integer,T>div(Integer const &a,T b);
 		Integer operator-(Integer a,Integer const &b);
 		Integer operator>>(Integer a,u32 b);
+		std::pair<Integer,Integer>div_inv(Integer const &a,Integer const &D,Integer const &x,u32 len);
+		std::pair<Integer,u32> inv(Integer const &D,u32 la);
 
 		std::vector<Integer> const &pow10()
 		{
 			constexpr u32 prebuilt=19;
-			static std::vector<Integer> cache=[]()
+			static auto const cache=[]()
 			{
 			  	std::vector<Integer>res(prebuilt,Integer::from(10));
 			  	for(u32 i=1;i<prebuilt;++i)
@@ -145,6 +147,11 @@ namespace reverSilly
 			}();
 			return cache;
 		}//sv[0] is low
+		Integer const &_1()
+		{
+			static Integer const _1=Integer::from(1);
+			return _1;
+		}
 		Integer Integer::from(std::string_view sv)
 		{
 			u32 const n=sv.size();
@@ -166,6 +173,13 @@ namespace reverSilly
 		}
 		std::string Integer::str()const //reversed
 		{
+			static auto const invs=[]()
+			{
+				std::vector<std::pair<Integer,u32>> res;
+				for(auto &i:pow10())
+					res.push_back(inv(i,i.len()*2));
+				return res;
+			}();
 			if(u32 l=len();l<64)
 			{
 				auto res=std::to_string(to<u64>());
@@ -176,7 +190,7 @@ namespace reverSilly
 			auto &p10=pow10();
 			int i=p10.size()-1;
 			for(;i>=0&&p10[i]>=*this;--i);
-			auto [d,r]=div(*this,p10[i]);
+			auto [d,r]=div_inv(*this,p10[i],invs[i].first,invs[i].second);
 			auto ds=d.str(),rs=r.str();
 			while(rs.size()<(1u<<i))
 				rs.push_back('0');
@@ -322,21 +336,17 @@ namespace reverSilly
 			rem.shrink();
 			return {std::move(res),std::move(rem)};
 		}
-		// https://chat.deepseek.com/share/zl3qgw9x663nryo7am
-		std::pair<Integer,Integer> div_newton(Integer const &a,Integer const &D)
+		std::pair<Integer,u32> inv(Integer const &D,u32 la)
 		{
-			static Integer const _1=Integer::from(1);
-			u32 const la=a.len(),lD=D.len();
-			if(la==0)
-				return {Integer(0),Integer(0)};
-			Integer x=_1;
+			u32 const lD=D.len();
+			Integer x=_1();
 			u32 len=lD,precision=1;
 			// means X(\in R) eq x/2^len
 			// |X-1/D|<=2^{-precision-lD}
 			// DX'-1<(DX-1)^2
 			for(;precision+lD<=la;)
 			{
-				x=x*((_1<<(len+1))-x*D);
+				x=x*((_1()<<(len+1))-x*D);
 				len<<=1;
 				precision<<=1;
 				if(precision>2)
@@ -349,14 +359,24 @@ namespace reverSilly
 					}
 				}
 			}
+			return {std::move(x),len};
+		}
+		std::pair<Integer,Integer>div_inv(Integer const &a,Integer const &D,Integer const &x,u32 len)
+		{
 			Integer d=(a*x)>>len,r=a-D*d;
 			//precision
 			while(r>=D)
 			{
-				d+=_1;
+				d+=_1();
 				r-=D;
 			}
 			return {std::move(d),std::move(r)};
+		}
+		// https://chat.deepseek.com/share/zl3qgw9x663nryo7am
+		std::pair<Integer,Integer> div_newton(Integer const &a,Integer const &D)
+		{
+			auto[x,len]=inv(D,a.len());
+			return div_inv(a,D,x,len);
 		}
 		std::pair<Integer,Integer> div(Integer const &a,Integer const &b)
 		{
