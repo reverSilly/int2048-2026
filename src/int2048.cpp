@@ -340,10 +340,10 @@ namespace reverSilly
 				x=x*((_1<<(len+1))-x*D);
 				len<<=1;
 				precision<<=1;
-				if(u32 lx=x.len();lx>precision)
+				if(u32 lx=x.len();lx>precision+1)
 				{
-					x>>=lx-precision;
-					len-=lx-precision;
+					x>>=lx-precision-1;
+					len-=lx-precision-1;
 				}
 			}
 			Integer d=(a*x)>>len,r=a-D*d;
