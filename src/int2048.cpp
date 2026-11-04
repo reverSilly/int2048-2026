@@ -182,13 +182,14 @@ namespace reverSilly
 		//data[0] lowest bit
 		Integer &operator+=(Integer &a,Integer const &b)
 		{
-			a.data.resize(std::max(a.data.size(),b.data.size())+1,0);
+			a.data.resize(ceildiv(std::max(a.len(),b.len())+1,64)*8,0);
 			bool carry=false;
-			for(u32 i=0;i<a.data.size();++i)
+			for(u32 i=0;i*8<a.data.size();++i)
 			{
-				bool nxcarry=(a.data[i]+carry+b.get(i))>=(1<<8);
-				a.data[i]+=b.get(i)+carry;
-				carry=nxcarry;
+				u64 &c=a.get<u64>(i);
+				u64 const bef=c;
+				c+=b.get<u64>(i)+carry;
+				carry=bef>c;
 			}
 			return a;
 		}
