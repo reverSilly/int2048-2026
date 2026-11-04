@@ -368,7 +368,7 @@ int2048::int2048(const std::string &s):value(0)
 	std::string ss=s;
 	for(int i=0;i*2u<ss.size();++i)
 		std::swap(ss[i],ss[ss.size()-1-i]);
-	if(ss.back()=='-')
+	if(!ss.empty()&&ss.back()=='-')
 	{
 		sign=-1;
 		ss.pop_back();
@@ -486,16 +486,17 @@ int2048 operator*(int2048 a,const int2048 &b)
 std::pair<int2048,int2048>div(int2048 const &a,int2048 const &b)
 {
 	auto[d,r]=div(a.value,b.value);
-	if(r.len()!=0&&a.sign*b.sign<0)
+	int2048 dd,rr;
+	dd.value=std::move(d);
+	rr.value=std::move(r);
+	dd.sign=a.sign*b.sign;
+	rr.sign=a.sign;
+	if(rr.value.len()!=0&&dd.sign<0)
 	{
-		d+=Integer::from(1);
-		r=b.value-r;
+		dd.add(-1);
+		rr.add(b);
 	}
-	int2048 aa,bb;
-	aa.sign=a.sign*b.sign;
-	aa.value=d;
-	bb.value=r;
-	return {std::move(aa),std::move(bb)};
+	return {std::move(dd),std::move(rr)};
 }
 
 int2048 &int2048::operator/=(const int2048 &b)

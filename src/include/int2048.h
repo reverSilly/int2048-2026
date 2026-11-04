@@ -185,7 +185,10 @@ public:
   friend std::istream &operator>>(std::istream &, int2048 &);
   friend std::ostream &operator<<(std::ostream &, const int2048 &);
 
-  friend bool operator==(const int2048 &, const int2048 &)=default;
+  friend bool operator==(const int2048 &a, const int2048 &b)
+  {
+    return (a<=>b)==std::strong_ordering::equal;
+  }
   friend bool operator!=(const int2048 &, const int2048 &)=default;
   friend bool operator<(const int2048 &, const int2048 &)=default;
   friend bool operator>(const int2048 &, const int2048 &)=default;
@@ -194,12 +197,14 @@ public:
 
   friend std::strong_ordering operator<=>(int2048 const &a,int2048 const &b)
   {
-  if(a.sign*b.sign<0)
-    return a.sign<=>b.sign;
-  if(a.sign>0)
-    return a.value<=>b.value;
-  else
-    return b.value<=>a.value;
+    if(a.value.len()==0&&b.value.len()==0)
+      return std::strong_ordering::equal;
+    if(a.sign*b.sign<0)
+      return a.sign<=>b.sign;
+    if(a.sign>0)
+      return a.value<=>b.value;
+    else
+      return b.value<=>a.value;
   }
 
   friend std::pair<int2048,int2048>div(int2048 const &a,int2048 const &b);
