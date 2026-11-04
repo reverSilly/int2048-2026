@@ -237,11 +237,11 @@ namespace reverSilly
 					a.get<u64>(i)=a.get<u64>(i-B)<<rem;
 					a.get<u64>(i)|=a.get<u64>(i-B-1)>>(64-rem);
 				}
+				if(a.data.size()>=B*8+8)
+					a.get<u64>(B)=a.get<u64>(0)<<rem;
 			}
-			else for(u32 i=a.data.size()/8-1;i>B;--i)
+			else for(u32 i=a.data.size()/8-1;i>=B;--i)
 				a.get<u64>(i)=a.get<u64>(i-B);
-			if(a.data.size()>=B*8+8)
-				a.get<u64>(B)=a.get<u64>(0)<<rem;
 			std::fill_n(a.data.begin(),B*8,0);
 			return a;
 		}
@@ -258,14 +258,14 @@ namespace reverSilly
 					a.get<u64>(i)=a.get<u64>(i+B)>>rem;
 					a.get<u64>(i)|=a.get<u64>(i+B+1)<<(64-rem);
 				}
+				if(a.data.size()>=B*8+8)
+				{
+					u64 const iback=a.data.size()/8-1;
+					a.get<u64>(iback-B)=a.get<u64>(iback)>>rem;
+				}
 			}
-			else for(u32 i=0;i*8<a.data.size();++i)
+			else for(u32 i=0;(i+B)*8<a.data.size();++i)
 				a.get<u64>(i)=a.get<u64>(i+B);
-			if(a.data.size()>=B*8+8)
-			{
-				u64 const iback=a.data.size()/8-1;
-				a.get<u64>(iback-B)=a.get<u64>(iback)>>rem;
-			}
 			a.shrink();
 			return a;
 		}
@@ -332,7 +332,7 @@ namespace reverSilly
 				return {Integer(0),Integer(0)};
 			Integer x=_1;
 			u32 len=lD,precision=1;//means X(\in R) eq x/2^len
-			for(;precision<la;)
+			for(;precision<=len;)
 			{
 				x=x*((_1<<(len+1))-x*D);
 				len<<=1;
@@ -344,6 +344,7 @@ namespace reverSilly
 				}
 			}
 			Integer d=(a*x)>>len,r=a-D*d;
+			//precision
 			while(r>=D)
 			{
 				d+=_1;
