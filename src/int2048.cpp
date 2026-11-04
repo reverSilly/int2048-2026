@@ -8,6 +8,25 @@ namespace reverSilly
 			return a/b;
 		return a/b+1;
 	}
+	void reverse(std::vector<u32>&v)
+	{
+		//(v.size()==lowbit(v.size()));
+		for(u32 i=0,r=0;i<v.size();++i)
+		{
+			if(i<r)
+				std::swap(v[i],v[r]);
+			for(u32 j=v.size()/2;j;j>>=1)
+			{
+				if(r&j)
+					r&=~j;
+				else
+				{
+					r|=j;
+					break;
+				}
+			}
+		}
+	}
 	template<u32 p,u32 g>
 	struct Mod
 	{
