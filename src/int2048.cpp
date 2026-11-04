@@ -331,7 +331,9 @@ namespace reverSilly
 			if(la==0)
 				return {Integer(0),Integer(0)};
 			Integer x=_1;
-			u32 len=lD,precision=lD;//means X(\in R) eq x/2^len
+			u32 len=lD,precision=lD;
+			// means X(\in R) eq x/2^len
+			// |X-1/D|<=2^{-precision}
 			for(;precision<la;)
 			{
 				x=x*((_1<<(len+1))-x*D);
