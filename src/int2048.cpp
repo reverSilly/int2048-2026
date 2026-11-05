@@ -71,9 +71,10 @@ namespace reverSilly
 			static std::vector<u32>w=Mod<p,g>::construct<false>(),iw=Mod<p,g>::construct<true>();
 			if(n==0||n==1)
 				return;
+			std::vector<u32>W(n);
 			for(u32 len=2;len<=n;len<<=1)
 			{
-				std::vector<u32>W(len/2);
+				W.resize(len/2);
 				W[0]=1;
 				if constexpr(iNTT)
 					W[1]=iw[__manual_clz(len)];
@@ -126,7 +127,7 @@ namespace reverSilly
 
 	std::vector<u64>mul(std::vector<u32>const &a,std::vector<u32>const &b)
 	{
-		if(a.size()*b.size()<200*(a.size()+b.size()))
+		if(a.size()*b.size()<230*(a.size()+b.size()))
 		{
 			std::vector<u64>res(a.size()+b.size(),0);
 			for(u32 i=0;i<a.size();++i)
