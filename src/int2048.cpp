@@ -129,7 +129,7 @@ namespace reverSilly
 	{
 		std::pair<Integer,Integer> div(Integer const &a,Integer const &b);
 		template<typename T>
-		std::pair<Integer,T>div(Integer const &a,T b);
+		T div_eq(Integer &a,T b);
 		Integer operator-(Integer a,Integer const &b);
 		Integer operator>>(Integer a,u32 b);
 		std::pair<Integer,Integer>div_inv(Integer const &a,Integer const &D,Integer const &x,u32 len);
@@ -171,21 +171,24 @@ namespace reverSilly
 				std::swap(res[i],res[res.size()-1-i]);
 			return res;
 		}
-		std::string str_plain(Integer const &x)
+		std::string str_plain(Integer x)
 		{
 			std::string str;
 			str.reserve(x.len()*0.3);
 			auto app=[&str](u64 x)
 			{
-				for(int i=0;i<16;++i)
+				for(int i=0;i<9;++i)
 				{
 					str.push_back('0'+x%10);
 					x/=10;
 				}
 				return false;
 			};
-			for(auto res=div(x,(u64)1e16);res.first.len()||app(res.second);res=div(res.first,(u64)1e16))
-				app(res.second);
+			for(auto res=div_eq(x,(u64)1e9);x.len()||app(res);res=div_eq(x,(u64)1e9))
+			{
+				app(res);
+				x.shrink();
+			}
 			while(!str.empty()&&str.back()=='0')
 				str.pop_back();
 			return str;
@@ -199,12 +202,11 @@ namespace reverSilly
 					res[i]=inv(pow10(i),pow10(i).len()*2);
 				return res[i];
 			};
-			int i=0;
+			int i=std::log2(x.len()/3.4);
 			for(;pow10(i+1)<x;++i);
 			auto [d,r]=div_inv(x,pow10(i),invs(i).first,invs(i).second);
 			auto ds=d.str(),rs=r.str();
-			while(rs.size()<(1u<<i))
-				rs.push_back('0');
+			rs.resize(1u<<i,'0');
 			return rs+ds;
 		}
 		std::string Integer::str()const //reversed
@@ -212,7 +214,7 @@ namespace reverSilly
 			u32 const l=len();
 			if(l<64)
 				return str_base(*this);
-			if(l<(1<<20))
+			if(l<(1<<15))
 				return str_plain(*this);
 			return str_div(*this);
 		}
@@ -408,21 +410,21 @@ namespace reverSilly
 			return div_newton(a,b);
 		}
 		template<typename T>
-		std::pair<Integer,T>div(Integer const &a,T b)
+		T div_eq(Integer &a,T b) //returns remainder
 		{
 			if(b==0)
 				throw std::invalid_argument("divided by zero.");
-			Integer res(a.data.size());
 			T rem=0;
-			for(int i=a.data.size()-1;i>=0;--i)
+			a.data.resize(ceildiv(a.len(),sizeof(T)*4)*sizeof(T)/2,0);
+			for(int i=a.data.size()*2/sizeof(T)-1;i>=0;--i)
 			{
-				rem<<=8;
-				rem|=a.data[i];
-				res.data[i]=rem/b;
+				rem<<=sizeof(T)*4;
+				rem|=a.get<T>(i);
+				a.get<T>(i)=rem/b;
 				rem%=b;
 			}
-			res.shrink();
-			return {std::move(res),rem};
+			a.shrink();
+			return rem;
 		}
 		Integer operator/(Integer const &a,Integer const &b)
 		{
