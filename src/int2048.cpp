@@ -334,7 +334,7 @@ namespace reverSilly
 			u32 const B=b>>6;
 			u32 const rem=b%(1<<6);
 			a.shrink();
-			a.data.resize(ceildiv(a.len()+b,64)*8,0);
+			a.data.resize(ceildiv(a.len(),64)*8,0);
 			if(rem)
 			{
 				for(u32 i=0;(i+B+1)*8<a.data.size();++i)
@@ -350,6 +350,7 @@ namespace reverSilly
 			}
 			else for(u32 i=0;(i+B)*8<a.data.size();++i)
 				a.get<u64>(i)=a.get<u64>(i+B);
+			a.data.resize(a.data.size()-8*B);
 			a.shrink();
 			return a;
 		}
@@ -417,18 +418,33 @@ namespace reverSilly
 			// DX'-1<(DX-1)^2
 			for(;precision+lD<=la;)
 			{
-				x=x*((_1()<<(len+1))-x*D);
-				len<<=1;
-				precision<<=1;
+				precision<<=1;//new precision
+				bool approx=false;
+				u32 excessive=0;
+				Integer curD=D;
 				if(precision>2)
 				{
-					if(u32 lx=x.len();lx>precision+1)
+					excessive=lD-std::min<u32>(lD,precision+2);
+					if(excessive)
 					{
-						x>>=lx-precision-1;
-						len-=lx-precision-1;
-						--precision;
+						curD>>=excessive;
+						curD+=_1();
+						approx=true;
 					}
 				}
+				x=x*((_1()<<(len+1-excessive))-x*curD);
+				len=len+len-excessive;
+				if(precision>2)
+				{
+					if(u32 lx=x.len();lx>precision+2)
+					{
+						x>>=lx-precision-2;
+						len-=lx-precision-2;
+						approx=true;
+					}
+				}
+				if(approx)
+					--precision; //new precision decrease because of approx
 			}
 			return {std::move(x),len};
 		}
@@ -452,9 +468,7 @@ namespace reverSilly
 		std::pair<Integer,Integer> div(Integer const &a,Integer const &b)
 		{
 			u64 const la=a.len(),lb=b.len();
-			if(la<=lb+64)
-				return div_newton(a,b);
-			if(la*lb<(1ull<<20)) 
+			if(la<=lb+64||la*lb<(1ull<<20)) 
 				return div_plain(a,b);
 			return div_newton(a,b);
 		}
