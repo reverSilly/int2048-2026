@@ -71,22 +71,22 @@ namespace reverSilly
 			static std::vector<u32>w=Mod<p,g>::construct<false>(),iw=Mod<p,g>::construct<true>();
 			if(n==0||n==1)
 				return;
-			std::vector<u32>W(n/2);
-			W[0]=1;
-			if constexpr(iNTT)
-				W[1]=iw[__manual_clz(n)];
-			else
-				W[1]=w[__manual_clz(n)];
-			for(u32 i=2;i<n/2;++i)
-				W[i]=W[i-1]*u64(W[1])%p;
 			for(u32 len=2;len<=n;len<<=1)
 			{
+				std::vector<u32>W(len/2);
+				W[0]=1;
+				if constexpr(iNTT)
+					W[1]=iw[__manual_clz(len)];
+				else
+					W[1]=w[__manual_clz(len)];
+				for(u32 i=2;i<len/2;++i)
+					W[i]=W[i-1]*u64(W[1])%p;
 				for(u32 i=0;i<n;i+=len)
 				{
 					for(u32 j=0;j<len/2;++j)
 					{
 						u64 const G=a[i+j],H=a[i+j+len/2];
-						u64 ww=W[n/len*j];
+						u64 ww=W[j];
 						a[i+j]=(G+ww*H)%p;
 						a[i+j+len/2]=(G+p-ww*H%p)%p;
 					}
@@ -126,7 +126,7 @@ namespace reverSilly
 
 	std::vector<u64>mul(std::vector<u32>const &a,std::vector<u32>const &b)
 	{
-		if(a.size()*b.size()<(1<<12))
+		if(a.size()*b.size()<200*(a.size()+b.size()))
 		{
 			std::vector<u64>res(a.size()+b.size(),0);
 			for(u32 i=0;i<a.size();++i)
@@ -202,7 +202,7 @@ namespace reverSilly
 			u32 const n=sv.size();
 			if(n<=18)
 				return parse_u64(sv);
-			if(n<=512)
+			if(n<=40960)
 				return parse_plain(sv);
 			u32 cur=ceil2(n)/2;
 			Integer left=from(sv.substr(0,cur)),base=from(sv.substr(cur));
@@ -258,7 +258,7 @@ namespace reverSilly
 			u32 const l=len();
 			if(l<64)
 				return str_base(*this);
-			if(l<(1<<16))
+			if(l<49152)
 				return str_plain(*this);
 			return str_div(*this);
 		}
@@ -462,7 +462,7 @@ namespace reverSilly
 		std::pair<Integer,Integer> div(Integer const &a,Integer const &b)
 		{
 			u64 const la=a.len(),lb=b.len();
-			if(la<=lb+64||la*lb<(1ull<<20)) 
+			if(la<=lb+64||(la>8*lb&&lb<1536))
 				return div_plain(a,b);
 			return div_newton(a,b);
 		}
