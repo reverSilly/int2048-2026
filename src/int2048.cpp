@@ -199,17 +199,17 @@ namespace reverSilly
 		}
 		std::string str_div(Integer const &x)
 		{
-			static auto const invs=[]()
+			static auto const invs=[](int i)->auto const&
 			{
-				std::vector<std::pair<Integer,u32>> res;
-				for(auto &i:pow10())
-					res.push_back(inv(i,i.len()*2));
-				return res;
-			}();
+				static std::vector<std::pair<Integer,u32>> res(pow10().size(),{Integer(0),0});
+				if(res[i].second==0)
+					res[i]=inv(pow10()[i],pow10()[i].len()*2);
+				return res[i];
+			};
 			auto &p10=pow10();
 			int i=p10.size()-1;
 			for(;i>=0&&p10[i]>=x;--i);
-			auto [d,r]=div_inv(x,p10[i],invs[i].first,invs[i].second);
+			auto [d,r]=div_inv(x,p10[i],invs(i).first,invs(i).second);
 			auto ds=d.str(),rs=r.str();
 			while(rs.size()<(1u<<i))
 				rs.push_back('0');
@@ -220,7 +220,7 @@ namespace reverSilly
 			u32 const l=len();
 			if(l<64)
 				return str_base(*this);
-			if(l<(1<<10))
+			if(l<(1<<20))
 				return str_plain(*this);
 			return str_div(*this);
 		}
@@ -408,11 +408,10 @@ namespace reverSilly
 		}
 		std::pair<Integer,Integer> div(Integer const &a,Integer const &b)
 		{
-			constexpr u64 lim=1ull<<10;
 			u64 const la=a.len(),lb=b.len();
 			if(la<=lb+64)
 				return div_newton(a,b);
-			if(la*lb<(1ull<<31)) 
+			if(la*lb<(1ull<<20)) 
 				return div_plain(a,b);
 			return div_newton(a,b);
 		}
