@@ -71,13 +71,13 @@ namespace reverSilly
 			static std::vector<u32>w=Mod<p,g>::construct<false>(),iw=Mod<p,g>::construct<true>();
 			if(n==0||n==1)
 				return;
-			std::vector<u32>W(n);
+			std::vector<u32>W(n/2);
 			W[0]=1;
 			if constexpr(iNTT)
 				W[1]=iw[__manual_clz(n)];
 			else
 				W[1]=w[__manual_clz(n)];
-			for(u32 i=2;i<n;++i)
+			for(u32 i=2;i<n/2;++i)
 				W[i]=W[i-1]*u64(W[1])%p;
 			for(u32 len=2;len<=n;len<<=1)
 			{
@@ -85,10 +85,10 @@ namespace reverSilly
 				{
 					for(u32 j=0;j<len/2;++j)
 					{
-						u64 const G=a[i+j],H=a[i+j+n/2];
+						u64 const G=a[i+j],H=a[i+j+len/2];
 						u64 ww=W[j*n/len];
-						a[i]=(G+ww*H)%p;
-						a[i+n/2]=(G+p-ww*H%p)%p;
+						a[i+j]=(G+ww*H)%p;
+						a[i+j+len/2]=(G+p-ww*H%p)%p;
 					}
 				}
 			}
@@ -116,6 +116,7 @@ namespace reverSilly
 				for(u32 i=0;i<n;++i)
 					a[i]=u64(a[i])*a[i]%p;
 			}
+			reverse(a);
 			NTT<true>(a.data(),n);
 			for(u32 i=0,in=inv(n);i<n;++i)
 				a[i]=u64(a[i])*in%p;
