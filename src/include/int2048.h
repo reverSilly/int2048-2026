@@ -23,6 +23,8 @@ namespace reverSilly
   using u16=unsigned short;
   using u32=unsigned int;
   using u64=unsigned long long;
+
+  // https://chat.deepseek.com/share/tv9ai8xucir93d2qw6
   template<typename T>
   u32 bitlen(T x)//not suitable for u64
   {
