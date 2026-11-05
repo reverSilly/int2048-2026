@@ -135,17 +135,12 @@ namespace reverSilly
 		std::pair<Integer,Integer>div_inv(Integer const &a,Integer const &D,Integer const &x,u32 len);
 		std::pair<Integer,u32> inv(Integer const &D,u32 la);
 
-		std::vector<Integer> const &pow10()
+		Integer const &pow10(u32 x)
 		{
-			constexpr u32 prebuilt=19;
-			static auto const cache=[]()
-			{
-			  	std::vector<Integer>res(prebuilt,Integer::from(10));
-			  	for(u32 i=1;i<prebuilt;++i)
-					res[i]=res[i-1]*res[i-1];
-				return res;
-			}();
-			return cache;
+			static std::vector<Integer> cache{Integer::from(10)};
+			for(u32 i=cache.size();i<=x;++i)
+				cache.push_back(cache.back()*cache.back());
+			return cache[x];
 		}//sv[0] is low
 		Integer const &_1()
 		{
@@ -165,11 +160,9 @@ namespace reverSilly
 				}
 				return Integer::from(res);
 			}
-			if(31-__manual_clz(n)>=pow10().size())
-				throw std::out_of_range("from string too long");
 			u32 cur=ceil2(n)/2;
 			Integer left=from(sv.substr(0,cur)),base=from(sv.substr(cur));
-			return left+base*pow10()[31-__manual_clz(cur)];
+			return left+base*pow10(31-__manual_clz(cur));
 		}
 		std::string str_base(Integer const &x)
 		{
@@ -201,15 +194,14 @@ namespace reverSilly
 		{
 			static auto const invs=[](int i)->auto const&
 			{
-				static std::vector<std::pair<Integer,u32>> res(pow10().size(),{Integer(0),0});
+				static std::vector<std::pair<Integer,u32>> res(30,{Integer(0),0});
 				if(res[i].second==0)
-					res[i]=inv(pow10()[i],pow10()[i].len()*2);
+					res[i]=inv(pow10(i),pow10(i).len()*2);
 				return res[i];
 			};
-			auto &p10=pow10();
-			int i=p10.size()-1;
-			for(;i>=0&&p10[i]>=x;--i);
-			auto [d,r]=div_inv(x,p10[i],invs(i).first,invs(i).second);
+			int i=0;
+			for(;pow10(i+1)<x;++i);
+			auto [d,r]=div_inv(x,pow10(i),invs(i).first,invs(i).second);
 			auto ds=d.str(),rs=r.str();
 			while(rs.size()<(1u<<i))
 				rs.push_back('0');
