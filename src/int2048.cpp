@@ -171,7 +171,33 @@ namespace reverSilly
 			Integer left=from(sv.substr(0,cur)),base=from(sv.substr(cur));
 			return left+base*pow10()[31-__manual_clz(cur)];
 		}
-		std::string Integer::str()const //reversed
+		std::string str_base(Integer const &x)
+		{
+			auto res=std::to_string(x.to<u64>());
+			for(u32 i=0;i*2<res.size();++i)
+				std::swap(res[i],res[res.size()-1-i]);
+			return res;
+		}
+		std::string str_plain(Integer const &x)
+		{
+			std::string str;
+			str.reserve(x.len()*0.3);
+			auto app=[&str](u64 x)
+			{
+				for(int i=0;i<16;++i)
+				{
+					str.push_back('0'+x%10);
+					x/=10;
+				}
+				return false;
+			};
+			for(auto res=div(x,(u64)1e16);res.first.len()||app(res.second);res=div(res.first,(u64)1e16))
+				app(res.second);
+			while(!str.empty()&&str.back()=='0')
+				str.pop_back();
+			return str;
+		}
+		std::string str_div(Integer const &x)
 		{
 			static auto const invs=[]()
 			{
@@ -180,21 +206,23 @@ namespace reverSilly
 					res.push_back(inv(i,i.len()*2));
 				return res;
 			}();
-			if(u32 l=len();l<64)
-			{
-				auto res=std::to_string(to<u64>());
-				for(u32 i=0;i*2<res.size();++i)
-					std::swap(res[i],res[res.size()-1-i]);
-				return res;
-			}
 			auto &p10=pow10();
 			int i=p10.size()-1;
-			for(;i>=0&&p10[i]>=*this;--i);
-			auto [d,r]=div_inv(*this,p10[i],invs[i].first,invs[i].second);
+			for(;i>=0&&p10[i]>=x;--i);
+			auto [d,r]=div_inv(x,p10[i],invs[i].first,invs[i].second);
 			auto ds=d.str(),rs=r.str();
 			while(rs.size()<(1u<<i))
 				rs.push_back('0');
 			return rs+ds;
+		}
+		std::string Integer::str()const //reversed
+		{
+			u32 const l=len();
+			if(l<64)
+				return str_base(*this);
+			if(l<(1<<10))
+				return str_plain(*this);
+			return str_div(*this);
 		}
 
 		std::strong_ordering operator<=>(Integer const &a,Integer const &b)
