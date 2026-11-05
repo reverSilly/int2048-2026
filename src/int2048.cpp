@@ -136,10 +136,8 @@ namespace reverSilly
 	namespace int2048
 	{
 		std::pair<Integer,Integer> div(Integer const &a,Integer const &b);
-		template<typename T>
-		T div_eq(Integer &a,T b);
-		template<typename T>
-		void mul_eq(Integer &a,T b);
+		u64 div_eq(Integer &a,u64 b);
+		void mul_eq(Integer &a,u64 b);
 		Integer operator-(Integer a,Integer const &b);
 		Integer operator>>(Integer a,u32 b);
 		Integer &operator+=(Integer &a,Integer const &b);
@@ -445,35 +443,32 @@ namespace reverSilly
 				return div_plain(a,b);
 			return div_newton(a,b);
 		}
-		template<typename T>
-		T div_eq(Integer &a,T b) //returns remainder
+		u64 div_eq(Integer &a,u64 b) //returns remainder
 		{
 			if(b==0)
 				throw std::invalid_argument("divided by zero.");
-			T rem=0;
-			a.data.resize(ceildiv(a.len(),sizeof(T)*4)*sizeof(T)/2,0);
-			for(int i=a.data.size()*2/sizeof(T)-1;i>=0;--i)
+			u64 rem=0;
+			a.data.resize(ceildiv(a.len(),32)*4,0);
+			for(int i=a.data.size()/4-1;i>=0;--i)
 			{
-				rem<<=sizeof(T)*4;
-				rem|=a.get<T>(i);
-				a.get<T>(i)=rem/b;
+				rem<<=32;
+				rem|=a.get<u32>(i);
+				a.get<u32>(i)=rem/b;
 				rem%=b;
 			}
 			a.shrink();
 			return rem;
 		}
-		template<typename T>
-		void mul_eq(Integer &a,T b)
+		void mul_eq(Integer &a,u64 b)
 		{
-			u32 resbit=a.len()+sizeof(T)*8;
-			a.data.resize(ceildiv(resbit,sizeof(T)*4)*sizeof(T)/2,0);
+			a.data.resize(ceildiv(a.len()+64,32)*4,0);
 			//align to sizeof(T)/2
-			T carry=0;
-			for(int i=0;i*sizeof(T)/2<a.data.size();++i)
+			u64 carry=0;
+			for(int i=0;i*4<a.data.size();++i)
 			{
-				T bef=a.get<T>(i);
-				a.get<T>(i)=bef*b+carry;
-				carry=(bef*b+carry)>>(sizeof(T)*4);
+				u32 bef=a.get<u32>(i);
+				a.get<u32>(i)=bef*b+carry;
+				carry=(bef*b+carry)>>32;
 			}
 			a.shrink();
 		}
