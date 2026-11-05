@@ -426,6 +426,21 @@ namespace reverSilly
 			a.shrink();
 			return rem;
 		}
+		template<typename T>
+		void mul_eq(Integer &a,T &b)
+		{
+			u32 resbit=a.len()+sizeof(T)*8;
+			a.data.resize(ceildiv(resbit,sizeof(T)*4)*sizeof(T)/2,0);
+			//align to sizeof(T)/2
+			T carry=0;
+			for(int i=0;i*sizeof(T)/2<a.data.size();++i)
+			{
+				T bef=a.get<T>(i);
+				a.get<T>(i)=bef*b+carry;
+				carry=(bef*b+carry)>>(sizeof(T)*4);
+			}
+			a.shrink();
+		}
 		Integer operator/(Integer const &a,Integer const &b)
 		{
 			return div(a,b).first;
