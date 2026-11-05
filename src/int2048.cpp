@@ -114,7 +114,7 @@ namespace reverSilly
 
 	std::vector<u64>mul(std::vector<u32>const &a,std::vector<u32>const &b)
 	{
-		if(a.size()*b.size()<(1<<8))
+		if(a.size()*b.size()<(1<<12))
 		{
 			std::vector<u64>res(a.size()+b.size(),0);
 			for(u32 i=0;i<a.size();++i)
@@ -244,7 +244,7 @@ namespace reverSilly
 			u32 const l=len();
 			if(l<64)
 				return str_base(*this);
-			if(l<(1<<13))
+			if(l<(1<<16))
 				return str_plain(*this);
 			return str_div(*this);
 		}
