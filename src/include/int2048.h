@@ -24,12 +24,16 @@ namespace reverSilly
   using u32=unsigned int;
   using u64=unsigned long long;
   template<typename T>
+  u32 bitlen(T x)//not suitable for u64
+  {
+    if(x==0)
+      return 0;
+    return ((std::bit_cast<u64>((double)x)>>52)&0b111'111'11111)-1022;
+  }
+  template<typename T>
   u32 __manual_clz(T x)
   {
-    for(u32 i=0;i<8*sizeof(T);++i)
-      if(x&(1ull<<(sizeof(T)*8-1-i)))
-        return i;
-    return 8*sizeof(T);
+    return sizeof(T)*8-bitlen(x);
   }
   template<typename T>
   T lowbit(T x)
