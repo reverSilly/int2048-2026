@@ -57,7 +57,7 @@ namespace reverSilly
     struct Integer//unsigned
     {
       std::vector<u8>data;
-      Integer(u32 n):data(n){}
+      explicit Integer(u32 n):data(n){}
       void shrink()
       {
         while(!data.empty()&&data.back()==0)

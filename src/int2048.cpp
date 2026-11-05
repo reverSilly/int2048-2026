@@ -93,9 +93,17 @@ namespace reverSilly
 			reverse(a);
 			reverse(b);
 			NTT<false>(a.data(),n);
-			NTT<false>(b.data(),n);
-			for(u32 i=0;i<n;++i)
-				a[i]=u64(a[i])*b[i]%p;
+			if(a!=b)
+			{
+				NTT<false>(b.data(),n);
+				for(u32 i=0;i<n;++i)
+					a[i]=u64(a[i])*b[i]%p;
+			}
+			else
+			{
+				for(u32 i=0;i<n;++i)
+					a[i]=u64(a[i])*a[i]%p;
+			}
 			reverse(a);
 			NTT<true>(a.data(),n);
 			for(u32 i=0,in=inv(n);i<n;++i)
@@ -130,8 +138,11 @@ namespace reverSilly
 		std::pair<Integer,Integer> div(Integer const &a,Integer const &b);
 		template<typename T>
 		T div_eq(Integer &a,T b);
+		template<typename T>
+		void mul_eq(Integer &a,T b);
 		Integer operator-(Integer a,Integer const &b);
 		Integer operator>>(Integer a,u32 b);
+		Integer &operator+=(Integer &a,Integer const &b);
 		std::pair<Integer,Integer>div_inv(Integer const &a,Integer const &D,Integer const &x,u32 len);
 		std::pair<Integer,u32> inv(Integer const &D,u32 la);
 
@@ -147,19 +158,40 @@ namespace reverSilly
 			static Integer const _1=Integer::from(1);
 			return _1;
 		}
+		Integer parse_base(std::string_view sv)
+		{
+			u64 res=0;
+			for(u32 i=sv.size()-1;i<sv.size();--i)
+			{
+				res*=10;
+				res+=sv[i]-'0';
+			}
+			return Integer::from(res);
+		}
+		Integer parse_plain(std::string_view sv)
+		{
+			static auto const numbers=[]()
+			{
+				std::vector<Integer>res;
+				for(int i=0;i<10;++i)
+					res.push_back(Integer::from(i));
+				return res;
+			}();
+			Integer res(0);
+			for(u32 i=sv.size()-1;i<sv.size();--i)
+			{
+				mul_eq(res,10ull);
+				res+=numbers[sv[i]-'0'];
+			}
+			return res;
+		}
 		Integer Integer::from(std::string_view sv)
 		{
 			u32 const n=sv.size();
 			if(n<=18)
-			{
-				u64 res=0;
-				for(u32 i=sv.size()-1;i<sv.size();--i)
-				{
-					res*=10;
-					res+=sv[i]-'0';
-				}
-				return Integer::from(res);
-			}
+				return parse_base(sv);
+			if(n<=512)
+				return parse_plain(sv);
 			u32 cur=ceil2(n)/2;
 			Integer left=from(sv.substr(0,cur)),base=from(sv.substr(cur));
 			return left+base*pow10(31-__manual_clz(cur));
@@ -241,6 +273,8 @@ namespace reverSilly
 				u64 const bef=c,bi=b.get<u64>(i);
 				c+=bi+carry;
 				carry=(bef>c)|(bi+carry<bi);
+				if(i*8>b.data.size()&&!carry)
+					break;
 			}
 			return a;
 		}
@@ -255,6 +289,8 @@ namespace reverSilly
 				u64 const bef=c,bi=b.get<u64>(i);
 				c-=carry+bi;
 				carry=(bef<c)|(bi+carry<bi);
+				if(i*8>b.data.size()&&!carry)
+					break;
 			}
 			a.shrink();
 			return a;
@@ -427,7 +463,7 @@ namespace reverSilly
 			return rem;
 		}
 		template<typename T>
-		void mul_eq(Integer &a,T &b)
+		void mul_eq(Integer &a,T b)
 		{
 			u32 resbit=a.len()+sizeof(T)*8;
 			a.data.resize(ceildiv(resbit,sizeof(T)*4)*sizeof(T)/2,0);
