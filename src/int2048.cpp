@@ -244,7 +244,7 @@ namespace reverSilly
 			u32 const l=len();
 			if(l<64)
 				return str_base(*this);
-			if(l<(1<<15))
+			if(l<(1<<13))
 				return str_plain(*this);
 			return str_div(*this);
 		}
@@ -274,6 +274,7 @@ namespace reverSilly
 				if(i*8>b.data.size()&&!carry)
 					break;
 			}
+			a.shrink();
 			return a;
 		}
 		Integer &operator-=(Integer &a,Integer const &b)//asserts a>=b
