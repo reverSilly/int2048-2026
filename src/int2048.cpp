@@ -233,7 +233,7 @@ namespace reverSilly
 				return res[i];
 			};
 			int i=std::log2(x.len()/3.4);
-			for(;pow10(i+1)<x;++i);
+			for(;pow10(i+1)<=x;++i);
 			auto [d,r]=div_inv(x,pow10(i),invs(i).first,invs(i).second);
 			auto ds=d.str(),rs=r.str();
 			rs.resize(1u<<i,'0');

@@ -30,7 +30,10 @@ namespace reverSilly
   {
     if(x==0)
       return 0;
-    return ((std::bit_cast<u64>((double)x)>>52)&0b111'111'11111)-1022;
+    double d=x;
+    u64 bits;
+    std::memcpy(&bits,&d,sizeof(bits));
+    return ((bits>>52)&0b111'111'11111)-1022;
   }
   template<typename T>
   u32 __manual_clz(T x)
