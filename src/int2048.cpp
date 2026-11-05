@@ -86,7 +86,7 @@ namespace reverSilly
 					for(u32 j=0;j<len/2;++j)
 					{
 						u64 const G=a[i+j],H=a[i+j+len/2];
-						u64 ww=W[j*n/len];
+						u64 ww=W[n/len*j];
 						a[i+j]=(G+ww*H)%p;
 						a[i+j+len/2]=(G+p-ww*H%p)%p;
 					}
@@ -410,9 +410,10 @@ namespace reverSilly
 		}
 		std::pair<Integer,u32> inv(Integer const &D,u32 la)
 		{
-			u32 const lD=D.len();
-			Integer x=_1();
-			u32 len=lD,precision=1;
+			u32 const lD=D.len(),front=std::min(lD,30u);
+			u64 Dapprox=(D>>(lD-front)).to<u64>()+1;
+			Integer x=Integer::from((1ull<<(30+front))/Dapprox);
+			u32 len=lD+30,precision=28;
 			// means X(\in R) eq x/2^len
 			// |X-1/D|<=2^{-precision-lD}
 			// DX'-1<(DX-1)^2
@@ -420,28 +421,21 @@ namespace reverSilly
 			{
 				precision<<=1;//new precision
 				bool approx=false;
-				u32 excessive=0;
 				Integer curD=D;
-				if(precision>2)
+				u32 excessive=lD-std::min<u32>(lD,precision+2);;
+				if(excessive)
 				{
-					excessive=lD-std::min<u32>(lD,precision+2);
-					if(excessive)
-					{
-						curD>>=excessive;
-						curD+=_1();
-						approx=true;
-					}
+					curD>>=excessive;
+					curD+=_1();
+					approx=true;
 				}
 				x=x*((_1()<<(len+1-excessive))-x*curD);
 				len=len+len-excessive;
-				if(precision>2)
+				if(u32 lx=x.len();lx>precision+2)
 				{
-					if(u32 lx=x.len();lx>precision+2)
-					{
-						x>>=lx-precision-2;
-						len-=lx-precision-2;
-						approx=true;
-					}
+					x>>=lx-precision-2;
+					len-=lx-precision-2;
+					approx=true;
 				}
 				if(approx)
 					--precision; //new precision decrease because of approx
@@ -493,7 +487,7 @@ namespace reverSilly
 			a.data.resize(ceildiv(a.len()+64,32)*4,0);
 			//align to sizeof(T)/2
 			u64 carry=0;
-			for(int i=0;i*4<a.data.size();++i)
+			for(u32 i=0;i*4<a.data.size();++i)
 			{
 				u32 bef=a.get<u32>(i);
 				a.get<u32>(i)=bef*b+carry;
