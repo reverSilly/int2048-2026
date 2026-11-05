@@ -381,10 +381,12 @@ namespace reverSilly
 		std::pair<Integer,Integer> div(Integer const &a,Integer const &b)
 		{
 			constexpr u64 lim=1ull<<10;
-			if(a.data.size()*b.data.size()<lim)
+			u64 const la=a.len(),lb=b.len();
+			if(la<=lb+64)
+				return div_newton(a,b);
+			if(la*lb<(1ull<<31)) 
 				return div_plain(a,b);
-			else
-			 	return div_newton(a,b);
+			return div_newton(a,b);
 		}
 		template<typename T>
 		std::pair<Integer,T>div(Integer const &a,T b)
