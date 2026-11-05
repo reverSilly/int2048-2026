@@ -71,16 +71,26 @@ namespace reverSilly
 			static std::vector<u32>w=Mod<p,g>::construct<false>(),iw=Mod<p,g>::construct<true>();
 			if(n==0||n==1)
 				return;
-			NTT<iNTT>(a,n/2);
-			NTT<iNTT>(a+n/2,n/2);
-			u64 W=w[__manual_clz(n)],ww=1;
+			std::vector<u32>W(n);
+			W[0]=1;
 			if constexpr(iNTT)
-				W=iw[__manual_clz(n)];
-			for(u32 i=0;i<n/2;++i,ww=ww*W%p)
+				W[1]=iw[__manual_clz(n)];
+			else
+				W[1]=w[__manual_clz(n)];
+			for(u32 i=2;i<n;++i)
+				W[i]=W[i-1]*u64(W[1])%p;
+			for(u32 len=2;len<=n;len<<=1)
 			{
-				u64 const G=a[i],H=a[i+n/2];
-				a[i]=(G+ww*H)%p;
-				a[i+n/2]=(G+p-ww*H%p)%p;
+				for(u32 i=0;i<n;i+=len)
+				{
+					for(u32 j=0;j<len/2;++j)
+					{
+						u64 const G=a[i+j],H=a[i+j+n/2];
+						u64 ww=W[j*n/len];
+						a[i]=(G+ww*H)%p;
+						a[i+n/2]=(G+p-ww*H%p)%p;
+					}
+				}
 			}
 		}
 		static std::vector<u32>mul(std::vector<u32> a,std::vector<u32> b)
@@ -156,7 +166,7 @@ namespace reverSilly
 			static Integer const _1=Integer::from(1);
 			return _1;
 		}
-		Integer parse_base(std::string_view sv)
+		Integer parse_u64(std::string_view sv)
 		{
 			u64 res=0;
 			for(u32 i=sv.size()-1;i<sv.size();--i)
@@ -176,10 +186,12 @@ namespace reverSilly
 				return res;
 			}();
 			Integer res(0);
-			for(u32 i=sv.size()-1;i<sv.size();--i)
+			for(int i=sv.size();i>0;)
 			{
-				mul_eq(res,10ull);
-				res+=numbers[sv[i]-'0'];
+				int j=std::max(i-9,0);
+				mul_eq(res,(u64)std::pow(10,i-j));
+				res+=parse_u64(sv.substr(j,i-j));
+				i=j;
 			}
 			return res;
 		}
@@ -187,7 +199,7 @@ namespace reverSilly
 		{
 			u32 const n=sv.size();
 			if(n<=18)
-				return parse_base(sv);
+				return parse_u64(sv);
 			if(n<=512)
 				return parse_plain(sv);
 			u32 cur=ceil2(n)/2;
