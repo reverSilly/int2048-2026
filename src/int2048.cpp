@@ -100,21 +100,22 @@ namespace reverSilly
 				throw std::out_of_range("integer too big");
 			a.resize(n,0);
 			b.resize(n,0);
-			reverse(a);
-			reverse(b);
-			NTT<false>(a.data(),n);
 			if(a!=b)
 			{
+				reverse(a);
+				reverse(b);
+				NTT<false>(a.data(),n);
 				NTT<false>(b.data(),n);
 				for(u32 i=0;i<n;++i)
 					a[i]=u64(a[i])*b[i]%p;
 			}
 			else
 			{
+				reverse(a);
+				NTT<false>(a.data(),n);
 				for(u32 i=0;i<n;++i)
 					a[i]=u64(a[i])*a[i]%p;
 			}
-			reverse(a);
 			NTT<true>(a.data(),n);
 			for(u32 i=0,in=inv(n);i<n;++i)
 				a[i]=u64(a[i])*in%p;
