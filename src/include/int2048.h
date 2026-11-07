@@ -66,32 +66,50 @@ namespace reverSilly
     struct Integer//unsigned
     {
       std::vector<u8>data;
-      explicit Integer(u32 n):data(n){}
+      explicit Integer(u32 n):data(n*2){}
+      u16 back()const
+      {
+        return get<u16>(data.size()/2-1);
+      }
       void shrink()
       {
-        while(!data.empty()&&data.back()==0)
+        while(data.size()>=2&&back()==0)
+        {
           data.pop_back();
+          data.pop_back();
+        }
       }
+
       u32 len()const
       {
-        int i=data.size()-1;
-        for(;i>=0&&data[i]==0;--i);
-        if(i<0)
-          return 0;
-        return i*8+8-__manual_clz(data[i]);
+        int i=data.size()/2-1;
+        while(i>=0&&get<u16>(i)==0)
+          --i;
+        return i+1;
       }
       template<typename T>
-      static Integer from(T i)
+      static Integer from(T x)
       {
-        Integer res(sizeof(T));
-        *reinterpret_cast<T*>(res.data.data())=i;
+        Integer res(0);
+        for(int i=0;x;++i,x/=10000)
+        {
+          res.data.push_back(0);
+          res.data.push_back(0);
+          res.get<u16>(i)=x%10000;
+        }
         return res;
       }
       static Integer from(std::string_view sv);
       template<typename T>
       T to()const
       {
-        return get<T>(0);
+        T res=0;
+        for(int i=data.size()/2;i>0;--i)
+        {
+          res*=10000;
+          res+=get<u16>(i-1);
+        }
+        return res;
       }
       std::string str()const;
       u8 get(u32 i)const

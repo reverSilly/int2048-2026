@@ -357,34 +357,29 @@ namespace reverSilly
 		}
 		Integer operator*(Integer const&a,Integer const &b)
 		{
-			u32 const la=a.len(),Ba=ceildiv(la,8);
-			u32 const lb=b.len(),Bb=ceildiv(lb,8);
-			if(la+lb<=64)
+			u32 const la=a.len();
+			u32 const lb=b.len();
+			if(la+lb<=4)
 				return Integer::from(a.to<u64>()*b.to<u64>());
-			std::vector<u32>aa(ceildiv(la,16)),bb(ceildiv(lb,16));
-			for(u32 i=0;i<Ba/2;++i)
+			std::vector<u32>aa(la),bb(lb);
+			for(u32 i=0;i<la;++i)
 				aa[i]=a.get<u16>(i);
-			if(Ba%2)
-				aa.back()=a.get(Ba-1);
-			for(u32 i=0;i<Bb/2;++i)
+			for(u32 i=0;i<lb;++i)
 				bb[i]=b.get<u16>(i);
-			if(Bb%2)
-				bb.back()=b.get(Bb-1);
 			auto res=mul(aa,bb);
 			u64 carry=0;
 			for(u32 i=0;i<res.size();++i)
 			{
 				res[i]+=carry;
-				carry=res[i]>>16;
-				res[i]%=(1<<16);
+				carry=res[i]/10000;
+				res[i]%=10000;
 			}
 			if(carry)
 				res.push_back(carry);
-			Integer res1(res.size()*2);
-			for(u32 i=0;i<res.size();++i)
+			Integer res1(res.size());
+			for(u32 i=0;i<res.size()/2;++i)
 			{
-				res1.data[i*2]=res[i]%(1<<8);
-				res1.data[i*2+1]=res[i]>>8;
+				res1.get<u16>(i)=res[i];
 			}
 			res1.shrink();
 			return res1;
