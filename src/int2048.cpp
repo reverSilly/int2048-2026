@@ -159,6 +159,11 @@ namespace reverSilly
 			static Integer const _1=Integer::from(1);
 			return _1;
 		}
+		Integer const &_2()
+		{
+			static Integer const _2=Integer::from(2);
+			return _2;
+		}
 		u16 stoi(std::string_view sv)
 		{
 			u16 res=0;
@@ -328,7 +333,7 @@ namespace reverSilly
 					curD+=_1();
 					approx=true;
 				}
-				x=x*((_1()<<(len+1-excessive))-x*curD);
+				x=x*((_2()<<(len-excessive))-x*curD);
 				len=len+len-excessive;
 				if(u32 lx=x.len();lx>precision+1)
 				{
