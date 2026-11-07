@@ -298,25 +298,6 @@ namespace reverSilly
 			return res1;
 		}
 		Integer operator<<(Integer a,u32 b);
-		std::pair<Integer,Integer> div_plain(Integer const &a,Integer const &b)
-		{
-			if(b.len()==0)
-				throw std::invalid_argument("divided by zero.");
-			Integer res(a.data.size()),rem(0);
-			for(int bit=a.len()-1;bit>=0;--bit)
-			{
-				rem<<=1;
-				rem.set_bit(0,a.get_bit(bit));
-				if(rem>=b)
-				{
-					rem-=b;
-					res.set_bit(bit,true);
-				}
-			}
-			res.shrink();
-			rem.shrink();
-			return {std::move(res),std::move(rem)};
-		}
 		u64 inv_1e20(u64 x)
 		{
 			constexpr u64 _1e15=1e15,_1e5=1e5;
@@ -379,9 +360,6 @@ namespace reverSilly
 		}
 		std::pair<Integer,Integer> div(Integer const &a,Integer const &b)
 		{
-			u64 const la=a.len(),lb=b.len();
-			if(la<=lb+64||(la>8*lb&&lb<1536))
-				return div_plain(a,b);
 			return div_newton(a,b);
 		}
 		Integer operator/(Integer const &a,Integer const &b)
