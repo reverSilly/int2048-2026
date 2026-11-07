@@ -1,5 +1,4 @@
 #include "int2048.h"
-#include <algorithm>
 
 namespace reverSilly
 {
@@ -216,9 +215,9 @@ namespace reverSilly
 			for(u32 i=0;i<n;++i)
 			{
 				u16 &c=a.get<u16>(i);
-				u16 const bi=b.get<u64>(i);
+				u16 const bi=b.get<u16>(i);
 				c+=bi+carry;
-				if(c>10000)
+				if(c>=10000)
 				{
 					carry=true;
 					c-=10000;
@@ -237,8 +236,8 @@ namespace reverSilly
 			bool carry=false;
 			for(u32 i=0;i<al;++i)
 			{
-				u64 &c=a.get<u64>(i);
-				u64 const bef=c,bi=b.get<u64>(i);
+				u16 &c=a.get<u16>(i);
+				u16 const bef=c,bi=b.get<u16>(i);
 				c-=carry+bi;
 				if(bef<c)
 				{

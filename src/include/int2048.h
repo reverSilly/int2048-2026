@@ -97,6 +97,7 @@ namespace reverSilly
           res.data.push_back(0);
           res.get<u16>(i)=x%10000;
         }
+        res.shrink();
         return res;
       }
       static Integer from(std::string_view sv);
