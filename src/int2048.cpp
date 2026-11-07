@@ -327,13 +327,14 @@ namespace reverSilly
 				carry=res[i]/10000;
 				res[i]%=10000;
 			}
-			if(carry)
-				res.push_back(carry);
-			Integer res1(res.size());
-			for(u32 i=0;i<res.size()/2;++i)
+			while(carry)
 			{
-				res1.get<u16>(i)=res[i];
+				res.push_back(carry%10000);
+				carry/=10000;
 			}
+			Integer res1(res.size());
+			for(u32 i=0;i<res.size();++i)
+				res1.get<u16>(i)=res[i];
 			res1.shrink();
 			return res1;
 		}
