@@ -1,4 +1,5 @@
 #include "int2048.h"
+#include <algorithm>
 
 namespace reverSilly
 {
@@ -169,45 +170,23 @@ namespace reverSilly
 			static Integer const _1=Integer::from(1);
 			return _1;
 		}
-		Integer parse_u64(std::string_view sv)
+		u16 stoi(std::string_view sv)
 		{
-			u64 res=0;
+			u16 res=0;
 			for(u32 i=sv.size()-1;i<sv.size();--i)
 			{
 				res*=10;
 				res+=sv[i]-'0';
-			}
-			return Integer::from(res);
-		}
-		Integer parse_plain(std::string_view sv)
-		{
-			static auto const numbers=[]()
-			{
-				std::vector<Integer>res;
-				for(int i=0;i<10;++i)
-					res.push_back(Integer::from(i));
-				return res;
-			}();
-			Integer res(0);
-			for(int i=sv.size();i>0;)
-			{
-				int j=std::max(i-9,0);
-				mul_eq(res,(u64)std::pow(10,i-j));
-				res+=parse_u64(sv.substr(j,i-j));
-				i=j;
 			}
 			return res;
 		}
 		Integer Integer::from(std::string_view sv)
 		{
 			u32 const n=sv.size();
-			if(n<=18)
-				return parse_u64(sv);
-			if(n<=40960)
-				return parse_plain(sv);
-			u32 cur=ceil2(n)/2;
-			Integer left=from(sv.substr(0,cur)),base=from(sv.substr(cur));
-			return left+base*pow10(31-__manual_clz(cur));
+			Integer res(ceildiv(n,4));
+			for(int i=0;i<res.data.size()/2;++i)
+				res.get<u16>(i)=stoi(sv.substr(i*4,4));
+			return res;
 		}
 		std::string str_base(Integer const &x)
 		{
