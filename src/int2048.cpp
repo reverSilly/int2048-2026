@@ -150,21 +150,11 @@ namespace reverSilly
 	namespace int2048
 	{
 		std::pair<Integer,Integer> div(Integer const &a,Integer const &b);
-		u64 div_eq(Integer &a,u64 b);
-		void mul_eq(Integer &a,u64 b);
 		Integer operator-(Integer a,Integer const &b);
 		Integer operator>>(Integer a,u32 b);
 		Integer &operator+=(Integer &a,Integer const &b);
 		std::pair<Integer,Integer>div_inv(Integer const &a,Integer const &D,Integer const &x,u32 len);
-		std::pair<Integer,u32> inv(Integer const &D,u32 la);
 
-		Integer const &pow10(u32 x)
-		{
-			static std::vector<Integer> cache{Integer::from(10)};
-			for(u32 i=cache.size();i<=x;++i)
-				cache.push_back(cache.back()*cache.back());
-			return cache[x];
-		}//sv[0] is low
 		Integer const &_1()
 		{
 			static Integer const _1=Integer::from(1);
@@ -264,48 +254,18 @@ namespace reverSilly
 		}
 		Integer &operator<<=(Integer &a,u32 const b)
 		{
-			u32 const B=b>>6;
-			u32 const rem=b%(1<<6);
 			a.shrink();
-			a.data.resize(ceildiv(a.len()+b,64)*8,0);
-			if(rem)
-			{
-				for(u32 i=a.data.size()/8-1;i>B;--i)
-				{
-					a.get<u64>(i)=a.get<u64>(i-B)<<rem;
-					a.get<u64>(i)|=a.get<u64>(i-B-1)>>(64-rem);
-				}
-				if(a.data.size()>=B*8+8)
-					a.get<u64>(B)=a.get<u64>(0)<<rem;
-			}
-			else if(B) for(u32 i=a.data.size()/8-1;i>=B;--i)
-				a.get<u64>(i)=a.get<u64>(i-B);
-			std::fill_n(a.data.begin(),B*8,0);
+			a.data.insert(a.data.begin(),b*2,0);
 			return a;
 		}
 		Integer &operator>>=(Integer &a,u32 b)
 		{
-			u32 const B=b>>6;
-			u32 const rem=b%(1<<6);
-			a.shrink();
-			a.data.resize(ceildiv(a.len(),64)*8,0);
-			if(rem)
+			if(b>a.len())
 			{
-				for(u32 i=0;(i+B+1)*8<a.data.size();++i)
-				{
-					a.get<u64>(i)=a.get<u64>(i+B)>>rem;
-					a.get<u64>(i)|=a.get<u64>(i+B+1)<<(64-rem);
-				}
-				if(a.data.size()>=B*8+8)
-				{
-					u64 const iback=a.data.size()/8-1;
-					a.get<u64>(iback-B)=a.get<u64>(iback)>>rem;
-				}
+				a.data.clear();
+				return a;
 			}
-			else for(u32 i=0;(i+B)*8<a.data.size();++i)
-				a.get<u64>(i)=a.get<u64>(i+B);
-			a.data.resize(a.data.size()-8*B);
-			a.shrink();
+			a.data.erase(a.data.begin(),a.data.begin()+b*2);
 			return a;
 		}
 		Integer operator*(Integer const&a,Integer const &b)
@@ -415,35 +375,6 @@ namespace reverSilly
 			if(la<=lb+64||(la>8*lb&&lb<1536))
 				return div_plain(a,b);
 			return div_newton(a,b);
-		}
-		u64 div_eq(Integer &a,u64 b) //returns remainder
-		{
-			if(b==0)
-				throw std::invalid_argument("divided by zero.");
-			u64 rem=0;
-			a.data.resize(ceildiv(a.len(),32)*4,0);
-			for(int i=a.data.size()/4-1;i>=0;--i)
-			{
-				rem<<=32;
-				rem|=a.get<u32>(i);
-				a.get<u32>(i)=rem/b;
-				rem%=b;
-			}
-			a.shrink();
-			return rem;
-		}
-		void mul_eq(Integer &a,u64 b)
-		{
-			a.data.resize(ceildiv(a.len()+64,32)*4,0);
-			//align to sizeof(T)/2
-			u64 carry=0;
-			for(u32 i=0;i*4<a.data.size();++i)
-			{
-				u32 bef=a.get<u32>(i);
-				a.get<u32>(i)=bef*b+carry;
-				carry=(bef*b+carry)>>32;
-			}
-			a.shrink();
 		}
 		Integer operator/(Integer const &a,Integer const &b)
 		{
