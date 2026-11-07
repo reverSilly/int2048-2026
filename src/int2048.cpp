@@ -316,8 +316,10 @@ namespace reverSilly
 			u64 Dapprox=(D>>(lD-front)).to<u64>();
 			if(front<lD)
 				++Dapprox;
+			for(u32 i=front;i<3;++i)
+    			Dapprox*=10000;
 			Integer x=Integer::from(inv_1e20(Dapprox));
-			u32 len=5+lD-front,precision=2;
+			u32 len=2+lD,precision=2;
 			// means X(\in R) eq x/2^len
 			// |X-1/D|<=2^{-precision-lD}
 			// DX'-1<(DX-1)^2
