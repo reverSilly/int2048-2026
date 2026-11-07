@@ -317,7 +317,7 @@ namespace reverSilly
 			if(front<lD)
 				++Dapprox;
 			Integer x=Integer::from(inv_1e20(Dapprox));
-			u32 len=5,precision=2;
+			u32 len=5+lD-front,precision=2;
 			// means X(\in R) eq x/2^len
 			// |X-1/D|<=2^{-precision-lD}
 			// DX'-1<(DX-1)^2
