@@ -188,59 +188,22 @@ namespace reverSilly
 				res.get<u16>(i)=stoi(sv.substr(i*4,4));
 			return res;
 		}
-		std::string str_base(Integer const &x)
-		{
-			auto res=std::to_string(x.to<u64>());
-			for(u32 i=0;i*2<res.size();++i)
-				std::swap(res[i],res[res.size()-1-i]);
-			return res;
-		}
-		std::string str_plain(Integer x)
-		{
-			std::string str;
-			str.reserve(x.len()*0.3);
-			auto app=[&str](u64 x)
-			{
-				for(int i=0;i<9;++i)
-				{
-					str.push_back('0'+x%10);
-					x/=10;
-				}
-				return false;
-			};
-			for(auto res=div_eq(x,(u64)1e9);x.len()||app(res);res=div_eq(x,(u64)1e9))
-			{
-				app(res);
-				x.shrink();
-			}
-			while(!str.empty()&&str.back()=='0')
-				str.pop_back();
-			return str;
-		}
-		std::string str_div(Integer const &x)
-		{
-			static auto const invs=[](int i)->auto const&
-			{
-				static std::vector<std::pair<Integer,u32>> res(30,{Integer(0),0});
-				if(res[i].second==0)
-					res[i]=inv(pow10(i),pow10(i).len()*2);
-				return res[i];
-			};
-			int i=std::log2(x.len()/3.4);
-			for(;pow10(i+1)<=x;++i);
-			auto [d,r]=div_inv(x,pow10(i),invs(i).first,invs(i).second);
-			auto ds=d.str(),rs=r.str();
-			rs.resize(1u<<i,'0');
-			return rs+ds;
-		}
 		std::string Integer::str()const //reversed
 		{
 			u32 const l=len();
-			if(l<64)
-				return str_base(*this);
-			if(l<49152)
-				return str_plain(*this);
-			return str_div(*this);
+			std::string res(len()*4,'0');
+			for(int i=0;i<l;++i)
+			{
+				u16 cur=get<u16>(i);
+				for(int j=0;j<4;++j)
+				{
+					res[i*4+j]='0'+cur%10;
+					cur/=10;
+				}
+			}
+			while(!res.empty()&&res.back()=='0')
+				res.pop_back();
+			return res;
 		}
 
 		std::strong_ordering operator<=>(Integer const &a,Integer const &b)
