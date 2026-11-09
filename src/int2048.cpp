@@ -1,5 +1,4 @@
 #include "int2048.h"
-#include <stdexcept>
 
 namespace reverSilly
 {
@@ -405,8 +404,9 @@ namespace reverSilly
 namespace sjtu {
 
 using reverSilly::int2048::Integer;
+using reverSilly::u64;
 int2048::int2048():sign{1},value(0){}
-int2048::int2048(long long x):value(Integer::from(std::abs(x)))
+int2048::int2048(long long x):value(Integer::from(x<0?0ull-u64(x):u64(x)))
 {
 	if(x<0)
 		sign=-1;
