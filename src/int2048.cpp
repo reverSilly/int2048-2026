@@ -316,6 +316,8 @@ namespace reverSilly
 		}
 		std::pair<Integer,u32> inv(Integer const &D,u32 la)
 		{
+			if(D.len()==0)
+				throw std::invalid_argument{"divided by zero."};
 			u32 const lD=D.len(),front=std::min(lD,3u);
 			u64 Dapprox=(D>>(lD-front)).to<u64>();
 			if(front<lD)
@@ -354,8 +356,6 @@ namespace reverSilly
 		}
 		std::pair<Integer,Integer>div_inv(Integer const &a,Integer const &D,Integer const &x,u32 len)
 		{
-			if(D.len()==0)
-				throw std::invalid_argument{"divided by zero."};
 			Integer d=(a*x)>>len,r=a-D*d;
 			//precision
 			while(r>=D)
