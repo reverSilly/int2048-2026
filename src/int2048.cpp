@@ -1,4 +1,5 @@
 #include "int2048.h"
+#include <stdexcept>
 
 namespace reverSilly
 {
@@ -353,6 +354,8 @@ namespace reverSilly
 		}
 		std::pair<Integer,Integer>div_inv(Integer const &a,Integer const &D,Integer const &x,u32 len)
 		{
+			if(D.len()==0)
+				throw std::invalid_argument{"divided by zero."};
 			Integer d=(a*x)>>len,r=a-D*d;
 			//precision
 			while(r>=D)
