@@ -76,10 +76,13 @@ namespace reverSilly
 			{
 				W.resize(len/2);
 				W[0]=1;
-				if constexpr(iNTT)
-					W[1]=iw[__manual_clz(len)];
-				else
-					W[1]=w[__manual_clz(len)];
+				if(len>2)
+				{
+					if constexpr(iNTT)
+						W[1]=iw[__manual_clz(len)];
+					else
+						W[1]=w[__manual_clz(len)];
+				}
 				for(u32 i=2;i<len/2;++i)
 					W[i]=W[i-1]*u64(W[1])%p;
 				for(u32 i=0;i<n;i+=len)
@@ -411,6 +414,8 @@ namespace reverSilly
 		}
 		std::pair<Integer,u32> inv(Integer const &D,u32 la)
 		{
+			if(D.len()==0)
+				throw std::logic_error{"divided by zero."};
 			u32 const lD=D.len(),front=std::min(lD,30u);
 			u64 Dapprox=(D>>(lD-front)).to<u64>()+1;
 			Integer x=Integer::from((1ull<<(30+front))/Dapprox);
@@ -526,8 +531,9 @@ namespace reverSilly
 namespace sjtu {
 
 using reverSilly::int2048::Integer;
+using reverSilly::u64;
 int2048::int2048():sign{1},value(0){}
-int2048::int2048(long long x):value(Integer::from(std::abs(x)))
+int2048::int2048(long long x):value(Integer::from(x<0?-u64(x):u64(x)))
 {
 	if(x<0)
 		sign=-1;
