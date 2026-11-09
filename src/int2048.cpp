@@ -76,10 +76,13 @@ namespace reverSilly
 			{
 				W.resize(len/2);
 				W[0]=1;
-				if constexpr(iNTT)
-					W[1]=iw[__manual_clz(len)];
-				else
-					W[1]=w[__manual_clz(len)];
+				if(len>2)
+				{
+					if constexpr(iNTT)
+						W[1]=iw[__manual_clz(len)];
+					else
+						W[1]=w[__manual_clz(len)];
+				}
 				for(u32 i=2;i<len/2;++i)
 					W[i]=W[i-1]*u64(W[1])%p;
 				for(u32 i=0;i<n;i+=len)
