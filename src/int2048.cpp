@@ -417,7 +417,9 @@ namespace reverSilly
 			if(D.len()==0)
 				throw std::logic_error{"divided by zero."};
 			u32 const lD=D.len(),front=std::min(lD,30u);
-			u64 Dapprox=(D>>(lD-front)).to<u64>()+1;
+			u64 Dapprox=(D>>(lD-front)).to<u64>();
+			if(front<lD)
+				++Dapprox;
 			Integer x=Integer::from((1ull<<(30+front))/Dapprox);
 			u32 len=lD+30,precision=28;
 			// means X(\in R) eq x/2^len
