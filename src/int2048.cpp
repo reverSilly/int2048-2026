@@ -207,7 +207,7 @@ namespace reverSilly
 		}
 		Integer parse_binary(std::string_view sv,u32 bl)
 		{
-			static constexpr auto parse=[]()
+			static constexpr auto hex2num=[]()
 			{
 				std::array<int,256>res;
 				res.fill(-1);
@@ -221,13 +221,19 @@ namespace reverSilly
 				return res;
 			}();
 			Integer res(ceildiv(sv.size()*bl,8));
-			int buf_len=0;
-			for(u32 buf=0,j=0,i=0;i<res.data.size();++i,buf>>=8,buf_len-=8)
+			res.data.clear();
+			u32 buf=0,buf_len=0;
+			for(u32 i=0;i<sv.size();++i)
 			{
-				for(;buf_len<8&&j<sv.size();++j,buf_len+=bl)
-					buf=(buf<<bl)+parse[sv[j]];
-				res.data[i]=buf&0b11111111;
+				buf=(buf<<buf_len)|hex2num[sv[i]];
+				buf_len+=bl;
+				for(;buf_len>=8;buf>>=8,buf_len-=8)
+					res.data.push_back(buf);
 			}
+			if(buf)
+				res.data.push_back(buf);
+			res.shrink();
+			return res;
 		}
 		Integer Integer::from(std::string_view sv,u32 b)
 		{
