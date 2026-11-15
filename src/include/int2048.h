@@ -174,6 +174,11 @@ public:
     else
       return 0;
   }
+  template<typename T>requires std::is_integral_v<T>
+  T to()const
+  {
+    return sign*value.to<T>();
+  }
 
   // 加上一个大整数
   int2048 &add(const int2048 &);
