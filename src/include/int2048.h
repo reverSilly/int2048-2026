@@ -1,4 +1,5 @@
 #pragma once
+#include <type_traits>
 #ifndef SJTU_BIGINTEGER
 #define SJTU_BIGINTEGER
 
@@ -93,6 +94,14 @@ namespace reverSilly
       {
         return get<T>(0);
       }
+      template<typename T>requires std::is_floating_point_v<T>
+      T to()const
+      {
+        T res=0;
+        for(int i=data.size()-1,E=i-8;i>=0&&i>=E;--i)
+          res=res*8+data[i];
+        return res;
+      }
       std::string str()const;
       u8 get(u32 i)const
       {
@@ -155,6 +164,16 @@ public:
   // 输出储存的大整数，无需换行
   void print()const;
   std::string str()const;
+  template<typename T>requires std::is_floating_point_v<T>
+  T to()const
+  {
+    if(sign<0)
+      return -value.to<T>();
+    if(sign==0)
+      return 0;
+    if(sign>0)
+      return value.to<T>();
+  }
 
   // 加上一个大整数
   int2048 &add(const int2048 &);
