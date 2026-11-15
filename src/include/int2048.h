@@ -169,10 +169,10 @@ public:
   {
     if(sign<0)
       return -value.to<T>();
-    if(sign==0)
-      return 0;
-    if(sign>0)
+    else if(sign>0)
       return value.to<T>();
+    else
+      return 0;
   }
 
   // 加上一个大整数
