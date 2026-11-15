@@ -205,7 +205,7 @@ namespace reverSilly
 			}
 			return res;
 		}
-		Integer parse_binary(std::string_view sv,u32 bl)
+		Integer parse_binary(std::string_view sv,u32 bit_in_digit)
 		{
 			static constexpr auto hex2num=[]()
 			{
@@ -220,13 +220,13 @@ namespace reverSilly
 				}
 				return res;
 			}();
-			Integer res(ceildiv(sv.size()*bl,8));
+			Integer res(ceildiv(sv.size()*bit_in_digit,8));
 			res.data.clear();
 			u32 buf=0,buf_len=0;
 			for(u32 i=0;i<sv.size();++i)
 			{
-				buf=(buf<<buf_len)|hex2num[sv[i]];
-				buf_len+=bl;
+				buf=buf|(hex2num[sv[i]]<<bit_in_digit);
+				buf_len+=bit_in_digit;
 				for(;buf_len>=8;buf>>=8,buf_len-=8)
 					res.data.push_back(buf);
 			}
