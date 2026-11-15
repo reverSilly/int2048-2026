@@ -82,7 +82,7 @@ namespace reverSilly
           return 0;
         return i*8+8-__manual_clz(data[i]);
       }
-      template<typename T>
+      template<typename T>requires std::is_integral_v<T>
       static Integer from(T i)
       {
         Integer res(sizeof(T));
@@ -90,7 +90,7 @@ namespace reverSilly
         return res;
       }
       static Integer from(std::string_view sv);
-      template<typename T>
+      template<typename T>requires std::is_integral_v<T>
       T to()const
       {
         return get<T>(0);
@@ -111,12 +111,12 @@ namespace reverSilly
           return data[i];
         return 0;
       }
-      template<typename T>
+      template<typename T>requires std::is_integral_v<T>
       T &get(u32 x) //no out_of_bound check
       {
         return *reinterpret_cast<T*>(data.data()+x*sizeof(T));
       }
-      template<typename T>
+      template<typename T>requires std::is_integral_v<T>
       T get(u32 x)const //with out_of_bound check
       {
         auto base=x*sizeof(T);

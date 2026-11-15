@@ -10,7 +10,7 @@ int main()
 		<<a.len()<<'\n'
 		<<(b<<1).to<int>()<<'\n'
 		<<(b<<10).to<int>()<<'\n'
-		<<(a>>10).to<int>();
+		<<a.to<double>();
 	assert(a>b);
 	// unsigned long long aaa=100;
 	// for(int i=0;i<8;++i)
