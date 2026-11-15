@@ -225,7 +225,7 @@ namespace reverSilly
 			u32 buf=0,buf_len=0;
 			for(u32 i=0;i<sv.size();++i)
 			{
-				buf=buf|(hex2num[sv[i]]<<buf_len);
+				buf|=hex2num[sv[i]]<<buf_len;
 				buf_len+=bit_in_digit;
 				for(;buf_len>=8;buf>>=8,buf_len-=8)
 					res.data.push_back(buf);
