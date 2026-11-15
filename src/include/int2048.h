@@ -1,4 +1,5 @@
 #pragma once
+#include <cmath>
 #include <type_traits>
 #ifndef SJTU_BIGINTEGER
 #define SJTU_BIGINTEGER
@@ -98,9 +99,10 @@ namespace reverSilly
       T to()const
       {
         T res=0;
-        for(int i=data.size()-1,E=i-8;i>=0&&i>=E;--i)
+        int i=data.size()-1,E=i-8;
+        for(;i>=0&&i>=E;--i)
           res=res*8+data[i];
-        return res;
+        return std::ldexp(res,(i+1)*8);
       }
       std::string str()const;
       u8 get(u32 i)const
