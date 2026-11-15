@@ -89,7 +89,7 @@ namespace reverSilly
         *reinterpret_cast<T*>(res.data.data())=i;
         return res;
       }
-      static Integer from(std::string_view sv);
+      static Integer from(std::string_view sv,u32 base=10);
       template<typename T>requires std::is_integral_v<T>
       T to()const
       {
@@ -151,7 +151,7 @@ public:
   // 构造函数
   int2048();
   int2048(long long);
-  int2048(const std::string &);
+  int2048(std::string,reverSilly::u32 base=10);
   int2048(const int2048 &);
   int2048(int2048&&)=default;
 

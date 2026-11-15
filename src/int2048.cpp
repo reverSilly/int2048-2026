@@ -1,4 +1,8 @@
 #include "int2048.h"
+#include <bit>
+#include <cassert>
+#include <string_view>
+#include <array>
 
 namespace reverSilly
 {
@@ -201,8 +205,37 @@ namespace reverSilly
 			}
 			return res;
 		}
-		Integer Integer::from(std::string_view sv)
+		Integer parse_binary(std::string_view sv,u32 bl)
 		{
+			static constexpr auto parse=[]()
+			{
+				std::array<int,256>res;
+				res.fill(-1);
+				for(int i=0;i<9;++i)
+					res[i+'0']=i;
+				for(int i=0;i<26;++i)
+				{
+					res[i+'a']=i+10;
+					res[i+'A']=i+10;
+				}
+				return res;
+			}();
+			Integer res(ceildiv(sv.size()*bl,8));
+			int buf_len=0;
+			for(u32 buf=0,buf_len,j=0,i=0;i<res.data.size();++i,buf>>=8,buf_len-=8)
+			{
+				for(;buf_len<8&&j<sv.size();++j,buf_len+=bl)
+					buf=(buf<<bl)+parse[sv[j]];
+				res.data[i]=buf&0b11111111;
+			}
+		}
+		Integer Integer::from(std::string_view sv,u32 b)
+		{
+			if(b!=10)
+			{
+				assert(b==lowbit(b));
+				return parse_binary(sv,std::bit_width(b)-1);
+			}
 			u32 const n=sv.size();
 			if(n<=18)
 				return parse_u64(sv);
@@ -542,9 +575,8 @@ int2048::int2048(long long x):value(Integer::from(x<0?-u64(x):u64(x)))
 	if(x>=0)
 		sign=1;
 }
-int2048::int2048(const std::string &s):value(0)
+int2048::int2048(std::string ss,reverSilly::u32 base):value(0)
 {
-	std::string ss=s;
 	for(int i=0;i*2u<ss.size();++i)
 		std::swap(ss[i],ss[ss.size()-1-i]);
 	if(!ss.empty()&&ss.back()=='-')
@@ -554,7 +586,7 @@ int2048::int2048(const std::string &s):value(0)
 	}
 	else
 	 	sign=1;
-	value=Integer::from(std::string_view(ss));
+	value=Integer::from(std::string_view(ss),base);
 }
 int2048::int2048(const int2048&)=default;
 
