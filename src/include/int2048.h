@@ -101,7 +101,7 @@ namespace reverSilly
         T res=0;
         int i=data.size()-1,E=i-8;
         for(;i>=0&&i>=E;--i)
-          res=res*8+data[i];
+          res=std::ldexp(res,8)+data[i];
         return std::ldexp(res,(i+1)*8);
       }
       std::string str()const;

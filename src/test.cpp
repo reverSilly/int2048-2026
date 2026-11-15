@@ -1,4 +1,5 @@
 #include<bits/stdc++.h>
+#include <iomanip>
 #include"int2048.cpp"
 using namespace std;
 using reverSilly::int2048::Integer;
@@ -10,7 +11,8 @@ int main()
 		<<a.len()<<'\n'
 		<<(b<<1).to<int>()<<'\n'
 		<<(b<<10).to<int>()<<'\n'
-		<<a.to<double>();
+		<<a.to<int>()<<'\n'
+		<<(a*a*a*a).to<double>()<<'\n';
 	assert(a>b);
 	// unsigned long long aaa=100;
 	// for(int i=0;i<8;++i)
