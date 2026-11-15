@@ -222,7 +222,7 @@ namespace reverSilly
 			}();
 			Integer res(ceildiv(sv.size()*bl,8));
 			int buf_len=0;
-			for(u32 buf=0,buf_len,j=0,i=0;i<res.data.size();++i,buf>>=8,buf_len-=8)
+			for(u32 buf=0,j=0,i=0;i<res.data.size();++i,buf>>=8,buf_len-=8)
 			{
 				for(;buf_len<8&&j<sv.size();++j,buf_len+=bl)
 					buf=(buf<<bl)+parse[sv[j]];
