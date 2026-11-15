@@ -99,8 +99,8 @@ namespace reverSilly
       T to()const
       {
         T res=0;
-        int i=data.size()-1,E=i-8;
-        for(;i>=0&&i>=E;--i)
+        int i=data.size()-1;
+        for(int const E=i-sizeof(T)+1;i>=0&&i>=E;--i)
           res=std::ldexp(res,8)+data[i];
         return std::ldexp(res,(i+1)*8);
       }
