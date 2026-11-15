@@ -153,6 +153,11 @@ public:
   int2048(const int2048 &);
   int2048(int2048&&)=default;
 
+  reverSilly::int2048::Integer const &data()const
+  {
+    return value;
+  }
+
   // 以下给定函数的形式参数类型仅供参考，可自行选择使用常量引用或者不使用引用
   // 如果需要，可以自行增加其他所需的函数
   // ===================================
@@ -163,6 +168,7 @@ public:
   void read(const std::string &);
   // 输出储存的大整数，无需换行
   void print()const;
+
   std::string str()const;
   template<typename T>requires std::is_floating_point_v<T>
   T to()const
