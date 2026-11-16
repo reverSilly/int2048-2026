@@ -1,6 +1,8 @@
 #include "int2048.h"
+#include <algorithm>
 #include <bit>
 #include <cassert>
+#include <stdexcept>
 #include <string_view>
 #include <array>
 
@@ -225,6 +227,9 @@ namespace reverSilly
 			u32 buf=0,buf_len=0;
 			for(u32 i=0;i<sv.size();++i)
 			{
+				auto cur=hex2num[sv[i]];
+				if(cur==-1||cur>=(1<<bit_in_digit))
+					throw std::invalid_argument{"invalid character in Integer::from"};
 				buf|=hex2num[sv[i]]<<buf_len;
 				buf_len+=bit_in_digit;
 				for(;buf_len>=8;buf>>=8,buf_len-=8)
@@ -235,6 +240,13 @@ namespace reverSilly
 			res.shrink();
 			return res;
 		}
+		Integer parse_div(std::string_view sv)
+		{
+			u32 const n=sv.size();
+			u32 cur=ceil2(n)/2;
+			Integer left=Integer::from(sv.substr(0,cur)),base=Integer::from(sv.substr(cur));
+			return left+base*pow10(31-__manual_clz(cur));
+		}
 		Integer Integer::from(std::string_view sv,u32 b)
 		{
 			if(b!=10)
@@ -242,14 +254,14 @@ namespace reverSilly
 				assert(b==lowbit(b));
 				return parse_binary(sv,std::bit_width(b)-1);
 			}
+			if(!std::all_of(sv.begin(),sv.end(),static_cast<int(*)(int)>(std::isdigit)))
+				throw std::invalid_argument{"Integer::from contained invalid character"};
 			u32 const n=sv.size();
 			if(n<=18)
 				return parse_u64(sv);
 			if(n<=40960)
 				return parse_plain(sv);
-			u32 cur=ceil2(n)/2;
-			Integer left=from(sv.substr(0,cur)),base=from(sv.substr(cur));
-			return left+base*pow10(31-__manual_clz(cur));
+			return parse_div(sv);
 		}
 		std::string str_base(Integer const &x)
 		{
